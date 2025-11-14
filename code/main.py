@@ -5,10 +5,6 @@ import numpy as np
 
 from monoEnv import *
 
-# TODO: extend droneSim into petting zoo 
-class SwarmSim(pettingzoo.AECEnv):
-    def __init__(self): 
-        pass 
 
 
 

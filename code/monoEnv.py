@@ -63,8 +63,6 @@ class DroneSim(gym.Env):
         else:
             pass
 
-
-
     # def info(self): 
     #     pass 
 
@@ -78,3 +76,22 @@ class DroneSim(gym.Env):
             raise NotImplementedError
 
 
+if __name__ == "__main__":
+    check_env(DroneSim())
+    np.set_printoptions(precision=3, sign=" ", floatmode="fixed")
+    
+    env = DroneSim("human") 
+    obs, _info = env.reset()
+
+    model = sb3.PPO("MlpPolicy", env, verbose=1)
+    model.learn(total_timesteps=50_000)
+
+    for i in range(300):
+        action, _state = model.predict(obs, deterministic=True)
+        obs, reward, terminated, truncated, info = env.step(action)
+        print(f"{i:3} {info["X"]} {obs} {action} {reward:.3f}")
+        env.render()
+        # VecEnv resets automatically
+        if terminated or truncated:
+          obs, _info = env.reset()
+    input("done.\n")
