@@ -4,14 +4,15 @@ import gymnasium as gym
 import numpy as np 
 
 import matplotlib.pyplot as plt
+import pettingzoo
 
-world_dims = np.array([64,64,64])
+world_size = 10
 
 class DroneSim(gym.Env):
     def __init__(self, render_mode = None): 
         #TODO: add sphere space
         self.action_space = gym.spaces.Box(-1,1, [3]) # simple XYZ coordinates defining movement step 
-        self.observation_space = gym.spaces.Box(-world_dims, world_dims, [3]) # simple XYZ coordinates
+        self.observation_space = gym.spaces.Box(-world_size, world_size, [3]) # simple XYZ coordinates
         self.random = np.random.default_rng(seed=None)
         self._init_renderer(render_mode)
 
@@ -28,20 +29,20 @@ class DroneSim(gym.Env):
         self.old_state = self.state.copy()
         self.state += action 
         obs = self._get_obs()
-        reward = self._reward().item()
-        truncated = True if np.linalg.norm(self.state) < 1. else False
-        terminated = not self.observation_space.contains(obs)
+        reward = self._reward()
+        truncated = not self.observation_space.contains(obs)
+        terminated = bool(np.linalg.norm(self.state) < 1)
         return obs, reward, terminated, truncated, {"X":self.state}
     
     def _get_obs(self):
         return (0-self.state)/np.linalg.norm(self.state,2)
 
     def _reward(self): 
-        return  (np.linalg.norm(self.old_state) - np.linalg.norm(self.state))
+        return  (np.linalg.norm(self.old_state) - np.linalg.norm(self.state)).item()
 
     def _init_renderer(self, render_mode):
         # TODO: decompose renderer out of DroneSim class
-        # TODO: add more efficent renderer based on PyQtGraph or done staticly - after the trainin
+        # TODO: add more efficent renderer based on PyQtGraph or done staticly - (after the training)
         self.render_mode = render_mode
         if self.render_mode == None: 
             return
@@ -74,10 +75,15 @@ class DroneSim(gym.Env):
         elif self.render_mode == "human":
             plt.ioff()
             plt.show()
+        else:
+            raise NotImplementedError
 
 
 
 # TODO: extend droneSim into petting zoo 
+class SwarmSim(pettingzoo.AECEnv):
+    def __init__(sefl): 
+        pass 
 
 
 
@@ -108,6 +114,7 @@ class Runtime:
 
 
 if __name__ == "__main__":
+    check_env(DroneSim())
 
     # episode_over = False 
     # total_reward = 0
@@ -130,19 +137,20 @@ if __name__ == "__main__":
 
     # print(f"Episode finished! Total reward: {total_reward}")
     # env.close()
+    np.set_printoptions(precision=3, sign=" ", floatmode="fixed")
     
     env = DroneSim("human") 
     obs, _info = env.reset()
 
     model = sb3.PPO("MlpPolicy", env, verbose=1)
-    model.learn(total_timesteps=10_000)
+    model.learn(total_timesteps=50_000)
 
-    for i in range(1000):
+    for i in range(300):
         action, _state = model.predict(obs, deterministic=True)
         obs, reward, terminated, truncated, info = env.step(action)
-        print(i, info["X"], action, reward)
+        print(f"{i:3} {info["X"]} {obs} {action} {reward:.3f}")
         env.render()
         # VecEnv resets automatically
         if terminated or truncated:
           obs, _info = env.reset()
-    check_env(DroneSim())
+    input("done.\n")
