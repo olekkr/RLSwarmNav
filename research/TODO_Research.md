@@ -8,6 +8,10 @@
 
 
 ## To read:
+- [ ] Ch. 9 Sutton
+- [ ] Ch 8 
+- [ ] Ch. 10 Sutton
+- [ ] MARL survey p. 10 - ...
 - [ ] Decentralized RL
 	- [ ] MAPPO
 - [ ]  Multi-agent Reinforcement Learning (MARL)
