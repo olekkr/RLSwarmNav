@@ -13,7 +13,6 @@ from stable_baselines3.common.evaluation import evaluate_policy
 
 from gym_pybullet_drones.utils.Logger import Logger
 from gym_pybullet_drones.utils.utils import sync, str2bool
-from gym_pybullet_drones.utils.enums import ObservationType, ActionType
 
 import CustomEnv 
 
