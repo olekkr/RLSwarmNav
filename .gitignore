@@ -1,4 +1,4 @@
 **/.obsidian/
 **/cache/
 **/__pycache__/
-.vscode/*
+code/vscode/*
