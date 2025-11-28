@@ -12,7 +12,7 @@ from cflib.crazyflie.syncLogger import SyncLogger
 
 
 # URI to the Crazyflie to connect to
-uri = uri_helper.uri_from_env(default='radio://0/100/2M/E7E7E7E7E7')
+uri = uri_helper.uri_from_env(default='radio://0/100/2M/E7E7E7E703')
 
 # Only output errors from the logging framework
 logging.basicConfig(level=logging.ERROR)

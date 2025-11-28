@@ -13,7 +13,7 @@ def simple_connect():
 
 
 # URI to the Crazyflie to connect to
-uri = uri_helper.uri_from_env(default='radio://0/100/2M/E7E7E7E7E7')
+uri = uri_helper.uri_from_env(default='radio://0/100/2M/E7E7E7E703')
 if __name__ == '__main__':
     # Initialize the low-level drivers
     cflib.crtp.init_drivers()
