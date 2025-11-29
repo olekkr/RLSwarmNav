@@ -38,15 +38,15 @@ test_env = CustomEnv.CustomAviary(gui=True,
 
 
 
-logger = Logger(logging_freq_hz=int(test_env.CTRL_FREQ),
-            num_drones=NUM_AGENTS,
-            # output_folder=output_folder,
-            colab=False
-            )
+# logger = Logger(logging_freq_hz=int(test_env.CTRL_FREQ),
+#             num_drones=NUM_AGENTS,
+#             # output_folder=output_folder,
+#             colab=False
+#             )
 
 
 
-obs, info = test_env.reset(seed=42, options={})
+obs, info = test_env.reset(seed=0, options={})
 start = time.time()
 for i in range((test_env.EPISODE_LEN_SEC+2)*test_env.CTRL_FREQ):
     action, _states = model.predict(obs,
@@ -55,7 +55,7 @@ for i in range((test_env.EPISODE_LEN_SEC+2)*test_env.CTRL_FREQ):
     obs, reward, terminated, truncated, info = test_env.step(action)
     obs2 = obs.squeeze()
     act2 = action.squeeze()
-    print("Obs:", obs, "\tAction", action, "\tReward:", reward, "\tTerminated:", terminated, "\tTruncated:", truncated)
+    print("\tAction", action, "\tReward:", reward, "\tTerminated:", terminated, "\tTruncated:", truncated)
     # for d in range(NUM_AGENTS):
     #     logger.log(drone=d,
     #         timestamp=i/test_env.CTRL_FREQ,
@@ -69,6 +69,6 @@ for i in range((test_env.EPISODE_LEN_SEC+2)*test_env.CTRL_FREQ):
     test_env.render()
     print(terminated)
     sync(i, start, test_env.CTRL_TIMESTEP)
-    if terminated or truncated:
+    if terminated:
         obs = test_env.reset(seed=42, options={})
-test_env.close()
+test_env.close

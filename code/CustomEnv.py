@@ -75,10 +75,10 @@ class CustomAviary(BaseRLAviary):
                          )
         # self.TARGET_POS = self.INIT_XYZS + np.array([[0,0,1/(i+1)] for i in range(num_drones)])
         self.TARGET_POS = np.array([
-                [0,0,1],
-                [1,1,1],
+                [0,0,2],
+                [1,0,2],
             ])
-        print(f"TARGET POSITION: {self.TARGET_POS}")
+        # print(f"TARGET POSITION: {self.TARGET_POS}")
 
     ################################################################################
 
@@ -97,9 +97,10 @@ class CustomAviary(BaseRLAviary):
         ret = 0
         for i in range(self.NUM_DRONES):
             ret += max(0, 2 - np.linalg.norm(self.TARGET_POS[i,:]-states[i][0:3])**4)
+
         return ret
 
-    ################################################################################
+    # ################################################################################
     
     def _computeTerminated(self):
         """Computes the current done value.
@@ -120,7 +121,7 @@ class CustomAviary(BaseRLAviary):
         else:
             return False
 
-    ################################################################################
+    # ################################################################################
     
     def _computeTruncated(self):
         """Computes the current truncated value.
@@ -157,37 +158,3 @@ class CustomAviary(BaseRLAviary):
 
         """
         return {"answer": 42} #### Calculated by the Deep Thought supercomputer in 7.5M years
-
-    ################################################################################
-
-    # def _preprocessAction(self, 
-    #                       action
-    #                       ):
-    #     """Pre-processes the action passed to `.step()` into motors' RPMs.
-
-    #     Parameter `action` is processed differenly for each of the different
-    #     action types: the input to n-th drone, `action[n]` can be of length
-    #     1, 3, or 4, and represent RPMs, desired thrust and torques, or the next
-    #     target position to reach using PID control.
-
-    #     Parameter `action` is processed differenly for each of the different
-    #     action types: `action` can be of length 1, 3, or 4 and represent 
-    #     RPMs, desired thrust and torques, the next target position to reach 
-    #     using PID control, a desired velocity vector, etc.
-
-    #     Parameters
-    #     ----------
-    #     action : ndarray
-    #         The input action for each drone, to be translated into RPMs.
-
-    #     Returns
-    #     -------
-    #     ndarray
-    #         (NUM_DRONES, 4)-shaped array of ints containing to clipped RPMs
-    #         commanded to the 4 motors of each drone.
-
-    #     """
-    #     #TODO: 
-    #     # takes action (waypoint command)
-    #     # process it into thrust+rpy via gym_pybullet_controller (thrust+rpy command)
-    #     # super._preprocessAction(it) 
