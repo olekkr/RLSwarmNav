@@ -6,8 +6,8 @@ from gym_pybullet_drones.utils.enums import DroneModel, Physics, ActionType, Obs
 from stable_baselines3 import PPO
 from gymnasium import spaces
 
+from constants import *
 
-ACTIONTYPE = ActionType.PID
 
 
 def load_policy(path="results"):
@@ -42,18 +42,18 @@ class CustomAviary(BaseRLAviary):
 
     def __init__(self,
                  drone_model: DroneModel=DroneModel.CF2X,
-                 num_drones: int=2,
+                 num_drones: int=NUM_AGENTS,
                  neighbourhood_radius: float=np.inf,
                  initial_xyzs=None,
                  initial_rpys=None,
                  physics: Physics=Physics.PYB,
                  pyb_freq: int = 240,
-                 ctrl_freq: int = 30,
+                 ctrl_freq: int = CTRL_FREQ,
                  gui=False,
                  record=False,
                  obs: ObservationType=ObservationType.KIN,
                  ):
-        act = ActionType.PID
+        act = ACTIONTYPE
         """Initialization of a multi-agent RL environment.
 
         Using the generic multi-agent RL superclass.

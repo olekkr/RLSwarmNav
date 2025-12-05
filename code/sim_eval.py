@@ -11,10 +11,10 @@ from gym_pybullet_drones.utils.Logger import Logger
 from gym_pybullet_drones.utils.utils import sync, str2bool
 from gym_pybullet_drones.utils.enums import ObservationType, ActionType
 
+from constants import *
 import custom_env 
 
 
-NUM_AGENTS = 2 
 
 
 policy = custom_env.load_policy()

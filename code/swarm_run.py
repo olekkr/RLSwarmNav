@@ -13,12 +13,10 @@ from cflib.crazyflie.commander import Commander
 from cflib.crazyflie.swarm import Swarm 
 from cflib.crazyflie.log import LogConfig
 
+from constants import *
 import custom_env
 
 
-NUM_AGENTS = 2
-ACTION_TYPE = ActionType.PID # only PID or VEL supported.
-CTRL_FREQ = 240
 
 
 URIs = [

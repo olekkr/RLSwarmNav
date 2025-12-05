@@ -14,12 +14,13 @@ from stable_baselines3.common.evaluation import evaluate_policy
 from gym_pybullet_drones.utils.Logger import Logger
 from gym_pybullet_drones.utils.utils import sync, str2bool
 
+from constants import * 
 import custom_env 
 
 
 
-train_env = custom_env.CustomAviary(num_drones=2)
-eval_env = custom_env.CustomAviary(num_drones=2)
+train_env = custom_env.CustomAviary(num_drones=NUM_AGENTS)
+eval_env = custom_env.CustomAviary(num_drones=NUM_AGENTS)
 
 
 print('[INFO] Action space:', train_env.action_space)
