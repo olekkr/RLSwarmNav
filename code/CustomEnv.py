@@ -1,12 +1,39 @@
 import numpy as np
+import os
 
 from gym_pybullet_drones.envs.BaseRLAviary import BaseRLAviary
 from gym_pybullet_drones.utils.enums import DroneModel, Physics, ActionType, ObservationType
-
+from stable_baselines3 import PPO
 from gymnasium import spaces
 
 
 ACTIONTYPE = ActionType.PID
+
+
+def load_policy(path="results"):
+    """
+    Load policy interactively
+    
+    :param path: Path to policy save directory
+    """ 
+    results = sorted(os.listdir(path), reverse=True)
+    inpnum = None
+    while inpnum == None:
+        inp = input(f"pick which directory to use ([0]-{len(results)}): \n{list(enumerate(results))}\n")
+        try:
+            inpnum = int(inp)
+        except:
+            inpnum = 0 if inp == "" else None
+        
+        if inpnum != None and 0 <= inpnum < len(results):
+            break
+        else: 
+            inpnum = None
+            print("not valid num")
+    print(f"{inpnum} -> {results[inpnum]} chosen.")
+    model = PPO.load(os.path.join(path, results[inpnum], "best_model.zip"))
+    return model
+    #TODO: extract info on num of agents
 
 class CustomAviary(BaseRLAviary):
     """Multi-agent RL problem: leader-follower."""
@@ -73,6 +100,7 @@ class CustomAviary(BaseRLAviary):
                          obs=obs,
                          act=act
                          )
+        # FIXME: WHy does target_pos not work?
         # self.TARGET_POS = self.INIT_XYZS + np.array([[0,0,1/(i+1)] for i in range(num_drones)])
         self.TARGET_POS = np.array([
                 [0,0,2],

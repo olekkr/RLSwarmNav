@@ -1,12 +1,10 @@
 
 
-import os
 import time
 from datetime import datetime
 # import argparse
 import gymnasium as gym
 import numpy as np
-from stable_baselines3 import PPO
 from stable_baselines3.common.evaluation import evaluate_policy
 
 from gym_pybullet_drones.utils.Logger import Logger
@@ -18,20 +16,15 @@ import CustomEnv
 
 NUM_AGENTS = 2 
 
-results = sorted(os.listdir("results"), reverse=True)
-print(list(zip(range(len(results)))), results)
 
-#TODO: load a specific model by specifying index.
-#TODO: extract info on num of agents
-model = PPO.load(os.path.join("results", results[0], "best_model.zip"))
-
+policy = CustomEnv.load_policy()
 
 test_env = CustomEnv.CustomAviary(gui=True,
                                 num_drones=NUM_AGENTS)
 
 # test_env_nogui = CustomEnv.CustomAviary(num_drones=NUM_AGENTS)
 
-# mean_reward, std_reward = evaluate_policy(model,
+# mean_reward, std_reward = evaluate_policy(policy,
 #                                               test_env_nogui,
 #                                               n_eval_episodes=10)
 # print(mean_reward, std_reward)
@@ -49,13 +42,15 @@ test_env = CustomEnv.CustomAviary(gui=True,
 obs, info = test_env.reset(seed=0, options={})
 start = time.time()
 for i in range((test_env.EPISODE_LEN_SEC+2)*test_env.CTRL_FREQ):
-    action, _states = model.predict(obs,
+    action, _states = policy.predict(obs,
                                     deterministic=True
                                     )
     obs, reward, terminated, truncated, info = test_env.step(action)
+    print(obs.shape, "aaaaaaaaaaa")
     obs2 = obs.squeeze()
     act2 = action.squeeze()
-    print("\tAction", action, "\tReward:", reward, "\tTerminated:", terminated, "\tTruncated:", truncated)
+    # print("\tAction", action, "\tReward:", reward, "\tTerminated:", terminated, "\tTruncated:", truncated)
+    
     # for d in range(NUM_AGENTS):
     #     logger.log(drone=d,
     #         timestamp=i/test_env.CTRL_FREQ,
