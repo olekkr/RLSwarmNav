@@ -11,18 +11,18 @@ from gym_pybullet_drones.utils.Logger import Logger
 from gym_pybullet_drones.utils.utils import sync, str2bool
 from gym_pybullet_drones.utils.enums import ObservationType, ActionType
 
-import CustomEnv 
+import custom_env 
 
 
 NUM_AGENTS = 2 
 
 
-policy = CustomEnv.load_policy()
+policy = custom_env.load_policy()
 
-test_env = CustomEnv.CustomAviary(gui=True,
+test_env = custom_env.CustomAviary(gui=True,
                                 num_drones=NUM_AGENTS)
 
-# test_env_nogui = CustomEnv.CustomAviary(num_drones=NUM_AGENTS)
+# test_env_nogui = custom_env.CustomAviary(num_drones=NUM_AGENTS)
 
 # mean_reward, std_reward = evaluate_policy(policy,
 #                                               test_env_nogui,

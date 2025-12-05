@@ -13,7 +13,7 @@ from cflib.crazyflie.commander import Commander
 from cflib.crazyflie.swarm import Swarm 
 from cflib.crazyflie.log import LogConfig
 
-import CustomEnv
+import custom_env
 
 
 NUM_AGENTS = 2
@@ -85,7 +85,7 @@ class Runtime() :
         print("connected to: ", self.swarm._cfs)
         self.drones = [Drone(cf) for cf in self.swarm._cfs.values() ]
         self.droneArg ={uri: [drone] for uri, drone in zip(self.drones, URIs)} 
-        self.policy = CustomEnv.load_policy()
+        self.policy = custom_env.load_policy()
         self.started = False
         self.obs = np.zeros((2,57)) # TODO: observe from policy instead
 
