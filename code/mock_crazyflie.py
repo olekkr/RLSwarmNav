@@ -19,6 +19,12 @@ class MockLogConfig:
     def _add_callback(self, cb):
         self._callback = cb
 
+    def start(self):
+        print(f"[MOCK] Started logging on {self.name}.")
+
+    def stop(self):
+        print(f"[MOCK] Stopped logging on {self.name}.")
+
     def simulate_tick(self):
         """Generate fake stateEstimate.x/y/z"""
 
@@ -28,7 +34,7 @@ class MockLogConfig:
             "stateEstimate.z": np.random.uniform(0,2)
         }
         if self._callback:
-            self._callback(time.time(), fake)
+            self._callback(time.time(), fake, MockLogConfig("[MOCK] logconfig", 20))
 
 
 # -----------------------------
@@ -37,8 +43,12 @@ class MockLogConfig:
 class MockCommander:
     def __init__(self, _): 
         pass 
-    def send_position_setpoint(self, x, y, z):
+
+    def send_position_setpoint(self, x, y, z, yaw):
         print(f"[MOCK] setpoint: x={x:.2f}, y={y:.2f}, z={z:.2f}")
+
+    def send_velocity_world_setpoint(self, vx, vy, vz, vYaw):
+        print(f"[MOCK] VEL-setpoint: vx={vx:.2f}, vy={vy:.2f}, vvz={vz:.2f}, vYaw={yaw:.2f}")
 
     def send_notify_setpoint_stop(self):
         print("[MOCK] stop setpoint stream")
@@ -50,6 +60,9 @@ class MockCommander:
 class MockMotionCommander:
     def __init__(self, cf):
         pass
+
+    def take_off(self, x=0., y=0.):
+        print("[MOCK] take_off")
 
     def land(self):
         print("[MOCK] landing")
@@ -109,6 +122,15 @@ class MockSwarm:
 
     def parallel(self, fn, args=None):
         return self.parallel_safe(fn, args)
+
+    def open_links(self):
+        pass 
+
+    def close_links(self):
+        pass 
+    
+    def reset_estimators(self):
+        pass 
 
     def __exit__(self, *args):
         print("[MOCK] Swarm exit")

@@ -9,50 +9,55 @@ from cflib.crazyflie.swarm import CachedCfFactory
 from constants import *
 import custom_env
 
-from cflib.crazyflie.swarm import Swarm
-from cflib.crazyflie.commander import Commander
-from cflib.positioning.motion_commander import MotionCommander
-from cflib.crazyflie.log import LogConfig
+# from cflib.crazyflie.swarm import Swarm
+# from cflib.crazyflie.commander import Commander
+# from cflib.positioning.motion_commander import MotionCommander
+# from cflib.crazyflie.log import LogConfig
 
 
-# if DEBUG:
-#     from mock_crazyflie import MockSwarm as Swarm 
-#     from mock_crazyflie import MockCommander as Commander 
-#     from mock_crazyflie import MockMotionCommander as MotionCommander
-#     from mock_crazyflie import MockLogConfig as LogConfig
-# else:
-#     from cflib.crazyflie.swarm import Swarm
-#     from cflib.crazyflie.commander import Commander
-#     from cflib.positioning.motion_commander import MotionCommander
-#     from cflib.crazyflie.log import LogConfig
+if DEBUG:
+    from mock_crazyflie import MockSwarm as Swarm 
+    from mock_crazyflie import MockCommander as Commander 
+    from mock_crazyflie import MockMotionCommander as MotionCommander
+    from mock_crazyflie import MockLogConfig as LogConfig
+else:
+    from cflib.crazyflie.swarm import Swarm
+    from cflib.crazyflie.commander import Commander
+    from cflib.positioning.motion_commander import MotionCommander
+    from cflib.crazyflie.log import LogConfig
 
 
 
 class Drone:
-    def __init__(self, scf, uri):
+    def __init__(self, scf):
         self.lc = Commander(scf.cf)
         self.mc = MotionCommander(scf.cf)
 
         #need:  X        Y        Z       Q1   Q2   Q3   Q4   R       P       Y       VX       VY       VZ       WX       WY       WZ
         # state estimate logging
-        lg_state = LogConfig("stateEstimate", 1000/CTRL_FREQ)
-        lg_state.add_variable("stateEstimate.x", "float")
-        lg_state.add_variable("stateEstimate.y", "float")
-        lg_state.add_variable("stateEstimate.z", "float")
+
+
+        # Position observation module: 
+        lg_pos = LogConfig("stateEstimate", 1000/CTRL_FREQ)
+        lg_pos.add_variable("stateEstimate.x", "float")
+        lg_pos.add_variable("stateEstimate.y", "float")
+        lg_pos.add_variable("stateEstimate.z", "float")
+        scf.cf.log.add_config(lg_pos)
+        self.lg_state = lg_pos
 
         # lg_state.add_variable("stateEstimate.qw", "float")
         # lg_state.add_variable("stateEstimate.qx", "float")
         # lg_state.add_variable("stateEstimate.qy", "float")
         # lg_state.add_variable("stateEstimate.qz", "float")
-        #
-        #
+        
+        
         # lg_state.add_variable("stateEstimate.roll", "float")
         # lg_state.add_variable("stateEstimate.pitch", "float")
         # lg_state.add_variable("stateEstimate.yaw", "float")
 
-        lg_state.add_variable("stateEstimate.vx", "float")
-        lg_state.add_variable("stateEstimate.vy", "float")
-        lg_state.add_variable("stateEstimate.vz", "float")
+        # lg_state.add_variable("stateEstimate.vx", "float")
+        # lg_state.add_variable("stateEstimate.vy", "float")
+        # lg_state.add_variable("stateEstimate.vz", "float")
 
         # lg_state2 = LogConfig("stateEstimateZ", 1000/CTRL_FREQ)
         # lg_state2.add_variable("stateEstimateZ.rateRoll", "float")
@@ -62,14 +67,12 @@ class Drone:
 
         # scf.cf.log.add_config(lg_state2)
 
-        scf.cf.log.add_config(lg_state)
-        self.lg_state = lg_state
 
-        lg_state.data_received_cb.add_callback(self._update_state)
+        lg_pos.data_received_cb.add_callback(self._update_state)
         self.obs = np.zeros(57)
 
     def _update_state(self, stamp, data, lg_conf):
-        # TODO: change 
+        # FIXME:: change 
         self.obs = data 
         # print("drone obs: ", data)
 
@@ -113,7 +116,7 @@ class Runtime() :
         self.obs = np.zeros_like(self.policy.observation_space)
 
     def _init_drone(self, scf, uri):
-        drone = Drone(scf, uri)
+        drone = Drone(scf)
         self.drones.append(drone)
         self.droneArg[uri] = [drone]
 
@@ -137,7 +140,7 @@ class Runtime() :
         self._collect_obs()
         print(self.obs)
         # action = self.policy.predict(self.obs)
-        action = [[0,0,1.0,0], [0,0,0.5, 0]] # TEMPORARY # FIXME: 
+        action = [[0,0,1.0,0], [0,0,0.5, 0]]  # FIXME: TEMPORARY
         for d, a in zip(self.drones, action): 
             d.update_act(a)
         try:
