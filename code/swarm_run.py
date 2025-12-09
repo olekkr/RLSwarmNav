@@ -4,69 +4,92 @@ import numpy as np
 from gym_pybullet_drones.utils.enums import ActionType
 
 import cflib.crtp
-from cflib.positioning.motion_commander import MotionCommander
-from cflib.crazyflie.commander import Commander
-from cflib.crazyflie.swarm import Swarm, CachedCfFactory
-from cflib.crazyflie.log import LogConfig
+from cflib.crazyflie.swarm import CachedCfFactory
 
 from constants import *
 import custom_env
 
+from cflib.crazyflie.swarm import Swarm
+from cflib.crazyflie.commander import Commander
+from cflib.positioning.motion_commander import MotionCommander
+from cflib.crazyflie.log import LogConfig
 
 
-
-URIs = [
-    "radio://0/100/2M/E7E7E7E701",
-    "radio://0/100/2M/E7E7E7E702",
-    # "radio://0/100/2M/E7E7E7E703",
-    # "radio://0/100/2M/E7E7E7E704",
-    # "radio://0/100/2M/E7E7E7E705",
-    # "radio://0/100/2M/E7E7E7E706",
-    # "radio://0/100/2M/E7E7E7E708",
-    # "radio://0/100/2M/E7E7E7E709",
-    # "radio://0/100/2M/E7E7E7E710"
-]
+# if DEBUG:
+#     from mock_crazyflie import MockSwarm as Swarm 
+#     from mock_crazyflie import MockCommander as Commander 
+#     from mock_crazyflie import MockMotionCommander as MotionCommander
+#     from mock_crazyflie import MockLogConfig as LogConfig
+# else:
+#     from cflib.crazyflie.swarm import Swarm
+#     from cflib.crazyflie.commander import Commander
+#     from cflib.positioning.motion_commander import MotionCommander
+#     from cflib.crazyflie.log import LogConfig
 
 
 
 class Drone:
-    
-    def __init__(self, scf):
+    def __init__(self, scf, uri):
         self.lc = Commander(scf.cf)
         self.mc = MotionCommander(scf.cf)
-        lg_state= LogConfig(name="stateEstimate", period_in_ms=1000/CTRL_FREQ)
+
+        #need:  X        Y        Z       Q1   Q2   Q3   Q4   R       P       Y       VX       VY       VZ       WX       WY       WZ
+        # state estimate logging
+        lg_state = LogConfig("stateEstimate", 1000/CTRL_FREQ)
         lg_state.add_variable("stateEstimate.x", "float")
         lg_state.add_variable("stateEstimate.y", "float")
         lg_state.add_variable("stateEstimate.z", "float")
-        self.obs = np.zeros(57)
-        # TODO: ADD MORE 
+
+        # lg_state.add_variable("stateEstimate.qw", "float")
+        # lg_state.add_variable("stateEstimate.qx", "float")
+        # lg_state.add_variable("stateEstimate.qy", "float")
+        # lg_state.add_variable("stateEstimate.qz", "float")
+        #
+        #
+        # lg_state.add_variable("stateEstimate.roll", "float")
+        # lg_state.add_variable("stateEstimate.pitch", "float")
+        # lg_state.add_variable("stateEstimate.yaw", "float")
+
+        lg_state.add_variable("stateEstimate.vx", "float")
+        lg_state.add_variable("stateEstimate.vy", "float")
+        lg_state.add_variable("stateEstimate.vz", "float")
+
+        # lg_state2 = LogConfig("stateEstimateZ", 1000/CTRL_FREQ)
+        # lg_state2.add_variable("stateEstimateZ.rateRoll", "float")
+        # lg_state2.add_variable("stateEstimateZ.ratePitch", "float")
+        # lg_state2.add_variable("stateEstimateZ.rateYaw", "float")
+
+
+        # scf.cf.log.add_config(lg_state2)
 
         scf.cf.log.add_config(lg_state)
+        self.lg_state = lg_state
 
-        # TODO: sus code
         lg_state.data_received_cb.add_callback(self._update_state)
+        self.obs = np.zeros(57)
 
-        self.lg_state = lg_state 
-
-    def _update_state(self, _timestamp, data):
+    def _update_state(self, stamp, data, lg_conf):
         # TODO: change 
         self.obs = data 
-        print(data)
+        # print("drone obs: ", data)
 
     def update_act(self, act):
         self.act = act
+
     
-def _start(scf):
+def _start(scf, drone:Drone):
+    drone.mc.take_off(0.4)
     scf.cf.platform.send_arming_request(True)
+    drone.lg_state.start()
     
 
-def _stop(_scf, drone:Drone):
+def _stop(_, drone:Drone):
     drone.lc.send_notify_setpoint_stop()
+    # drone.lc.send_velocity_world_setpoint(0,0,-0.2,0)
     drone.mc.land()
-    drone.mc.__exit__(None,None,None)
+    drone.lg_state.stop()
 
-def _act(_scf, drone:Drone):
-
+def _act(_, drone:Drone):
     if ACTIONTYPE == ActionType.PID:
         drone.lc.send_position_setpoint(*drone.act)
     else: 
@@ -78,25 +101,33 @@ def _act(_scf, drone:Drone):
 
 class Runtime() : 
     def __init__(self, URIs=URIs):
-        self.swarm = Swarm(URIs,CachedCfFactory(rw_cache='./cache'))
-        print("connected to: ", self.swarm._cfs)
-        self.drones = [Drone(cf) for cf in self.swarm._cfs.values() ]
-        self.droneArg ={uri: [drone] for uri, drone in zip(self.drones, URIs)} 
-        print(f"test: {self.drones}")
+        self.swarm = Swarm(URIs, factory=CachedCfFactory(rw_cache='./cache'))
+        self.swarm.open_links()
+        self.droneArg = {}
+        self.drones = []
+
+        self.swarm.parallel_safe(self._init_drone, {u:[u] for u in URIs})
+
         self.policy = custom_env.load_policy()
         self.started = False
-        self.obs = np.empty_like(self.policy.observation_space.shape)
-        
+        self.obs = np.zeros_like(self.policy.observation_space)
+
+    def _init_drone(self, scf, uri):
+        drone = Drone(scf, uri)
+        self.drones.append(drone)
+        self.droneArg[uri] = [drone]
+
     def _start_drones(self):
-        # self.swarm.reset_estimators() # FIXME
+        self.swarm.reset_estimators() 
         try:
-            self.swarm.parallel_safe(_start)
+            self.swarm.parallel_safe(_start, self.droneArg)
             self.started = True
-        except:
-            self.swarm.parallel(_stop)
+        except Exception as e: 
+            print("failed in _start_drones")
+            self.stop_drones()
         
-    def _stop_drones(self):
-        self.swarm.parallel(_stop, self.drones)
+    def stop_drones(self):
+        self.swarm.parallel(_stop, self.droneArg)
         self.started = False
 
     def _collect_obs(self): 
@@ -104,14 +135,16 @@ class Runtime() :
         
     def _step(self):
         self._collect_obs()
-        action = self.policy.predict(self.obs)
+        print(self.obs)
+        # action = self.policy.predict(self.obs)
+        action = [[0,0,1.0,0], [0,0,0.5, 0]] # TEMPORARY # FIXME: 
         for d, a in zip(self.drones, action): 
             d.update_act(a)
         try:
             self.swarm.parallel_safe(_act, self.droneArg)
         except Exception as e:
-            print("failed with exception:", e, "\nstopping.")
-            self.swarm.parallel(_stop)
+            print("failed with exception: in _step()", e, "  stopping.")
+            self.stop_drones()
 
 
     def run(self, duration):
@@ -129,10 +162,16 @@ class Runtime() :
             if now - start > duration:
                 break
             time.sleep(last_tick-now+target_period)
+        self.stop_drones()
+
+        self.__del__() 
 
 
 
-    def __exit__(self):
+    def __del__(self):
+        # not sure if its the right magic
+        print("exiting swarm")
+        self.swarm.close_links()
         self.swarm.__exit__(None,None,None)
 
 
@@ -142,6 +181,6 @@ if __name__ == "__main__":
     cflib.crtp.init_drivers()
 
     drone = Runtime() 
-    drone.run(-1)
+    drone.run(4)
 
 
