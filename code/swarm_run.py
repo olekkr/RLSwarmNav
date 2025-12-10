@@ -148,11 +148,9 @@ class Runtime() :
         
     def _step(self):
         self._collect_obs()
-        print(self.obs)
         action, _states = self.policy.predict(self.obs, deterministic=True)
         action = np.concat([action, np.zeros((len(action),1))], axis=1)
-        print(action)
-        # action = [[0,0,1.0,0], [0,0,0.5, 0]]  # FIXME: TEMPORARY
+        print(f"action: {action}, observation: {self.obs}" )
         for d, a in zip(self.drones, action): 
             d.update_act(a)
         try:

@@ -38,7 +38,7 @@ class ObsMod:
 
 
 
-class XYZPosObs(ObsMod):
+class PosObs(ObsMod):
     def __init__(self):
         super().__init__("XYZ Pos", 3)
 
