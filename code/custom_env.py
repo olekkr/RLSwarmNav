@@ -100,12 +100,12 @@ class CustomAviary(BaseRLAviary):
                          obs=obs,
                          act=act
                          )
+        self.TARGET_POS = self.INIT_XYZS + np.array([[0,0,1/(i+1)] for i in range(num_drones)])
         # FIXME: WHy does target_pos not work?
-        # self.TARGET_POS = self.INIT_XYZS + np.array([[0,0,1/(i+1)] for i in range(num_drones)])
-        self.TARGET_POS = np.array([
-                [0,0,2],
-                [1,0,2],
-            ])
+        # self.TARGET_POS = np.array([
+        #         [0,0,2],
+        #         [1,0,2],
+        #     ])
         # print(f"TARGET POSITION: {self.TARGET_POS}")
 
     ################################################################################

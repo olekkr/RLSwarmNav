@@ -3,9 +3,10 @@ import os
 from gym_pybullet_drones.utils.enums import ActionType, Physics
 
 ACTIONTYPE = ActionType.PID
-NUM_AGENTS = 2 
+NUM_AGENTS = 1 
 CTRL_FREQ = 30
-DEBUG = True
+DEBUG = False
+# BUILDNAME = ""
 
 
 # use different channel for each dongle, for each dongle use different address.

@@ -73,8 +73,10 @@ class Drone:
 
     def _update_state(self, stamp, data, lg_conf):
         # FIXME:: change 
-        self.obs = data 
-        # print("drone obs: ", data)
+        self.obs[0] = data["stateEstimate.x"]
+        self.obs[1] = data["stateEstimate.y"]
+        self.obs[2] = data["stateEstimate.z"]
+
 
     def update_act(self, act):
         self.act = act
@@ -82,7 +84,6 @@ class Drone:
     
 def _start(scf, drone:Drone):
     drone.mc.take_off(0.4)
-    scf.cf.platform.send_arming_request(True)
     drone.lg_state.start()
     
 
@@ -139,8 +140,10 @@ class Runtime() :
     def _step(self):
         self._collect_obs()
         print(self.obs)
-        # action = self.policy.predict(self.obs)
-        action = [[0,0,1.0,0], [0,0,0.5, 0]]  # FIXME: TEMPORARY
+        action, _states = self.policy.predict(self.obs, deterministic=True)
+        action = np.concat([action, np.zeros((len(action),1))], axis=1)
+        print(action)
+        # action = [[0,0,1.0,0], [0,0,0.5, 0]]  # FIXME: TEMPORARY
         for d, a in zip(self.drones, action): 
             d.update_act(a)
         try:
@@ -157,15 +160,27 @@ class Runtime() :
         start = time.perf_counter()
 
         target_period = 1/CTRL_FREQ 
+        i = 0 
+        i_overstep_period = 0
         while True: 
             last_tick = time.perf_counter()
-
+            
+            i += 1
             self._step()
             now = time.perf_counter()
             if now - start > duration:
                 break
-            time.sleep(last_tick-now+target_period)
+            sleep_t = last_tick-now+target_period
+            if sleep_t < 0:
+                # TODO: maybe infer max rate, from sleep_t
+                i_overstep_period += 1 
+                sleep_t = 0 
+
+            time.sleep(sleep_t)
         self.stop_drones()
+
+        if i_overstep_period >0:
+            print(f"overstepped {100 * i/i_overstep_period}% of the time")
 
         self.__del__() 
 
