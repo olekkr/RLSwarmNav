@@ -5,7 +5,6 @@ from gym_pybullet_drones.utils.enums import ActionType
 
 import cflib.crtp
 from cflib.crazyflie.swarm import CachedCfFactory
-
 from constants import *
 import custom_env
 
@@ -37,13 +36,13 @@ class Drone:
         # state estimate logging
 
 
-        # Position observation module: 
-        lg_pos = LogConfig("stateEstimate", 1000/CTRL_FREQ)
-        lg_pos.add_variable("stateEstimate.x", "float")
-        lg_pos.add_variable("stateEstimate.y", "float")
-        lg_pos.add_variable("stateEstimate.z", "float")
-        scf.cf.log.add_config(lg_pos)
-        self.lg_state = lg_pos
+        # # Position observation module: 
+        # lg_pos = LogConfig("stateEstimate", 1000/CTRL_FREQ)
+        # lg_pos.add_variable("stateEstimate.x", "float")
+        # lg_pos.add_variable("stateEstimate.y", "float")
+        # lg_pos.add_variable("stateEstimate.z", "float")
+        # scf.cf.log.add_config(lg_pos)
+        # self.lg_state = lg_pos
 
         # lg_state.add_variable("stateEstimate.qw", "float")
         # lg_state.add_variable("stateEstimate.qx", "float")
@@ -68,30 +67,36 @@ class Drone:
         # scf.cf.log.add_config(lg_state2)
 
 
-        lg_pos.data_received_cb.add_callback(self._update_state)
-        self.obs = np.zeros(57)
+        # lg_pos.data_received_cb.add_callback(self._update_state)
 
-    def _update_state(self, stamp, data, lg_conf):
-        # FIXME:: change 
-        self.obs[0] = data["stateEstimate.x"]
-        self.obs[1] = data["stateEstimate.y"]
-        self.obs[2] = data["stateEstimate.z"]
+        for o in OBS_MODULES:
+            o.cf_init(scf)
+
+    # def _update_state(self, time, data, lg_conf):
+    #     self.obs[0] = data["stateEstimate.x"]
+    #     self.obs[1] = data["stateEstimate.y"]
+    #     self.obs[2] = data["stateEstimate.z"]
 
 
     def update_act(self, act):
         self.act = act
+        
 
     
 def _start(scf, drone:Drone):
     drone.mc.take_off(0.4)
-    drone.lg_state.start()
+    for o in OBS_MODULES:
+        o.start()
+    # drone.lg_state.start()
     
 
 def _stop(_, drone:Drone):
     drone.lc.send_notify_setpoint_stop()
     # drone.lc.send_velocity_world_setpoint(0,0,-0.2,0)
     drone.mc.land()
-    drone.lg_state.stop()
+    for o in OBS_MODULES:
+        o.stop()
+    # drone.lg_state.stop()
 
 def _act(_, drone:Drone):
     if ACTIONTYPE == ActionType.PID:
@@ -114,7 +119,7 @@ class Runtime() :
 
         self.policy = custom_env.load_policy()
         self.started = False
-        self.obs = np.zeros_like(self.policy.observation_space)
+        # self.obs = np.zeros_like(self.policy.observation_space)
 
     def _init_drone(self, scf, uri):
         drone = Drone(scf)
@@ -123,6 +128,7 @@ class Runtime() :
 
     def _start_drones(self):
         self.swarm.reset_estimators() 
+        self._collect_obs()
         try:
             self.swarm.parallel_safe(_start, self.droneArg)
             self.started = True
@@ -131,11 +137,14 @@ class Runtime() :
             self.stop_drones()
         
     def stop_drones(self):
+        for o in OBS_MODULES:
+            o.stop()
         self.swarm.parallel(_stop, self.droneArg)
         self.started = False
 
     def _collect_obs(self): 
-        self.obs = np.stack([np.array(d.obs) for d in self.drones],axis=0)
+        # self.obs = np.stack([np.array(d.obs) for d in self.drones],axis=0)
+        self.obs = np.stack([np.concat([o.data for o in OBS_MODULES])])
         
     def _step(self):
         self._collect_obs()

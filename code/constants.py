@@ -7,7 +7,8 @@ NUM_AGENTS = 1
 CTRL_FREQ = 30
 DEBUG = False
 # BUILDNAME = ""
-
+import observation_module as om
+OBS_MODULES = [om.XYZPosObs(), om.ZeroObs(54)]
 
 # use different channel for each dongle, for each dongle use different address.
 URIs = [ 
