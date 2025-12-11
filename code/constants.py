@@ -1,17 +1,16 @@
 import os 
 
 from gym_pybullet_drones.utils.enums import ActionType, Physics
+from observation_module import *
 
+# TODO: # BUILDNAME = ""
 ACTIONTYPE = ActionType.PID
 NUM_AGENTS = 1 
 CTRL_FREQ = 30
 DEBUG = False
-# BUILDNAME = ""
-import observation_module as om
-OBS_MODULES = [om.XYZPosObs(), om.ZeroObs(54)]
 
 # use different channel for each dongle, for each dongle use different address.
-URIs = [ 
+URIs = [
     # "radio://0/100/2M/E7E7E7E701",
     "radio://0/100/2M/E7E7E7E702",
     # "radio://0/100/2M/E7E7E7E703",

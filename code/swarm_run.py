@@ -5,6 +5,7 @@ from gym_pybullet_drones.utils.enums import ActionType
 
 import cflib.crtp
 from cflib.crazyflie.swarm import CachedCfFactory
+from observation_module import OBS_MODULES
 from constants import *
 import custom_env
 
@@ -32,51 +33,21 @@ class Drone:
         self.lc = Commander(scf.cf)
         self.mc = MotionCommander(scf.cf)
 
-        #need:  X        Y        Z       Q1   Q2   Q3   Q4   R       P       Y       VX       VY       VZ       WX       WY       WZ
-        # state estimate logging
 
-
-        # # Position observation module: 
-        # lg_pos = LogConfig("stateEstimate", 1000/CTRL_FREQ)
-        # lg_pos.add_variable("stateEstimate.x", "float")
-        # lg_pos.add_variable("stateEstimate.y", "float")
-        # lg_pos.add_variable("stateEstimate.z", "float")
-        # scf.cf.log.add_config(lg_pos)
-        # self.lg_state = lg_pos
-
-        # lg_state.add_variable("stateEstimate.qw", "float")
-        # lg_state.add_variable("stateEstimate.qx", "float")
-        # lg_state.add_variable("stateEstimate.qy", "float")
-        # lg_state.add_variable("stateEstimate.qz", "float")
-        
-        
-        # lg_state.add_variable("stateEstimate.roll", "float")
-        # lg_state.add_variable("stateEstimate.pitch", "float")
-        # lg_state.add_variable("stateEstimate.yaw", "float")
-
-        # lg_state.add_variable("stateEstimate.vx", "float")
-        # lg_state.add_variable("stateEstimate.vy", "float")
-        # lg_state.add_variable("stateEstimate.vz", "float")
-
-        # lg_state2 = LogConfig("stateEstimateZ", 1000/CTRL_FREQ)
-        # lg_state2.add_variable("stateEstimateZ.rateRoll", "float")
-        # lg_state2.add_variable("stateEstimateZ.ratePitch", "float")
-        # lg_state2.add_variable("stateEstimateZ.rateYaw", "float")
-
-
-        # scf.cf.log.add_config(lg_state2)
 
 
         # lg_pos.data_received_cb.add_callback(self._update_state)
-
-        for o in OBS_MODULES:
-            o.cf_init(scf)
+        self.obs_mods = [o().cf_init(scf) for o in OBS_MODULES ]
+        self.update_obs()
+    
 
     # def _update_state(self, time, data, lg_conf):
     #     self.obs[0] = data["stateEstimate.x"]
     #     self.obs[1] = data["stateEstimate.y"]
     #     self.obs[2] = data["stateEstimate.z"]
 
+    def update_obs(self):
+        self.data = np.concat([m.data for m in self.obs_mods])
 
     def update_act(self, act):
         self.act = act
@@ -85,7 +56,7 @@ class Drone:
     
 def _start(scf, drone:Drone):
     drone.mc.take_off(0.4)
-    for o in OBS_MODULES:
+    for o in drone.obs_mods:
         o.start()
     # drone.lg_state.start()
     
@@ -94,7 +65,7 @@ def _stop(_, drone:Drone):
     drone.lc.send_notify_setpoint_stop()
     # drone.lc.send_velocity_world_setpoint(0,0,-0.2,0)
     drone.mc.land()
-    for o in OBS_MODULES:
+    for o in drone.obs_mods:
         o.stop()
     # drone.lg_state.stop()
 
@@ -105,7 +76,6 @@ def _act(_, drone:Drone):
         print("not supported action type")
         exit()
 
-    
 
 
 class Runtime() : 
@@ -137,23 +107,26 @@ class Runtime() :
             self.stop_drones()
         
     def stop_drones(self):
-        for o in OBS_MODULES:
-            o.stop()
         self.swarm.parallel(_stop, self.droneArg)
         self.started = False
 
     def _collect_obs(self): 
-        # self.obs = np.stack([np.array(d.obs) for d in self.drones],axis=0)
-        self.obs = np.stack([np.concat([o.data for o in OBS_MODULES])])
+        for d in self.drones:
+            d.update_obs()
+        # FIXME: this is to jank
+        # need to insert drone into obs_mods so obs_mods can edit .data
+        self.obs = np.stack([d.data for d in self.drones])
+        # self.obs = np.stack([np.concat([m.data for m in d.obs_mods]) for d in self.drones])
         
     def _step(self):
         self._collect_obs()
         action, _states = self.policy.predict(self.obs, deterministic=True)
         action = np.concat([action, np.zeros((len(action),1))], axis=1)
-        print(f"action: {action}, observation: {self.obs}" )
+        print(f"action: {action}, \nobservation: {self.obs}" )
         for d, a in zip(self.drones, action): 
             d.update_act(a)
         try:
+            pass
             self.swarm.parallel_safe(_act, self.droneArg)
         except Exception as e:
             print("failed with exception: in _step()", e, "  stopping.")
@@ -187,7 +160,7 @@ class Runtime() :
         self.stop_drones()
 
         if i_overstep_period >0:
-            print(f"overstepped {100 * i/i_overstep_period}% of the time")
+            print(f"overstepped {100 * i_overstep_period/i}% of the time")
 
         self.__del__() 
 
