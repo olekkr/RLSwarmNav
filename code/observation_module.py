@@ -39,10 +39,7 @@ class SimpleObs(ObsMod):
     def cf_init(self, scf):
         log_conf = LogConfig(self.TOCName, 1000/CTRL_FREQ)
         for k in self.keys:
-            log_conf.add_variable(f"{self.TOCName}.{k}", float)
-        # log_conf.add_variable("stateEstimate.x", "float")
-        # log_conf.add_variable("stateEstimate.y", "float")
-        # log_conf.add_variable("stateEstimate.z", "float")
+            log_conf.add_variable(f"{self.TOCName}.{k}", "float")
         scf.cf.log.add_config(log_conf)
         log_conf.data_received_cb.add_callback(self._cb)
         self.log_conf = log_conf
@@ -58,7 +55,19 @@ class SimpleObs(ObsMod):
 
 class PosObs(SimpleObs):
     def __init__(self):
-        super().__init__("Pos", "stateEstimate", ["x","y","z"])
+        super().__init__("POS", "stateEstimate", ["x","y","z"])
+class VelObs(SimpleObs):
+    def __init__(self):
+        super().__init__("VEL", "stateEstimate", ["vx","vy","vz"])
+class RPYObs(SimpleObs):
+    def __init__(self):
+        super().__init__("RPY", "stateEstimate", ["roll","pitch","yaw"])
+class AngRateObs(SimpleObs):
+    def __init__(self):
+        super().__init__("ANG_RATE", "stateEstimateZ", ["rateRoll","ratePitch","rateYaw"])
+class QUATObs(SimpleObs):
+    def __init__(self):
+        super().__init__("ANG_RATE", "stateEstimate", ["qw","qx","qy", "qz"])
 
 class ZeroObs(ObsMod):
     def __init__(self, size):
@@ -125,5 +134,9 @@ class dummyLogConfig ():
 
 OBS_MODULES = [
     partial(PosObs), 
-    partial(ZeroObs, 54)]
+    partial(RPYObs),
+    partial(VelObs),
+    # partial(QUATObs),
+    partial(AngRateObs),
+    partial(ZeroObs, 45)]
 

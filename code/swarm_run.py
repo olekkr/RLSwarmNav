@@ -55,9 +55,9 @@ class Drone:
 
     
 def _start(scf, drone:Drone):
-    drone.mc.take_off(0.4)
     for o in drone.obs_mods:
         o.start()
+    drone.mc.take_off(0.4)
     # drone.lg_state.start()
     
 
@@ -72,6 +72,8 @@ def _stop(_, drone:Drone):
 def _act(_, drone:Drone):
     if ACTIONTYPE == ActionType.PID:
         drone.lc.send_position_setpoint(*drone.act)
+    elif ACTIONTYPE == ActionType.VEL:
+        drone.lc.send_velocity_world_setpoint(*drone.act)
     else: 
         print("not supported action type")
         exit()
@@ -113,7 +115,7 @@ class Runtime() :
     def _collect_obs(self): 
         for d in self.drones:
             d.update_obs()
-        # FIXME: this is to jank
+        # FIXME: this is too jank
         # need to insert drone into obs_mods so obs_mods can edit .data
         self.obs = np.stack([d.data for d in self.drones])
         # self.obs = np.stack([np.concat([m.data for m in d.obs_mods]) for d in self.drones])
@@ -122,11 +124,10 @@ class Runtime() :
         self._collect_obs()
         action, _states = self.policy.predict(self.obs, deterministic=True)
         action = np.concat([action, np.zeros((len(action),1))], axis=1)
-        print(f"action: {action}, \nobservation: {self.obs}" )
+        print(f"action: \n{action}, \nobservation: \n{self.obs}" )
         for d, a in zip(self.drones, action): 
             d.update_act(a)
         try:
-            pass
             self.swarm.parallel_safe(_act, self.droneArg)
         except Exception as e:
             print("failed with exception: in _step()", e, "  stopping.")
@@ -177,6 +178,8 @@ class Runtime() :
 
 if __name__ == "__main__":
     cflib.crtp.init_drivers()
+
+    np.set_printoptions(precision=3, sign=" ", suppress=True)
 
     drone = Runtime() 
     drone.run(4)
