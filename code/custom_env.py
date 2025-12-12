@@ -1,12 +1,39 @@
 import numpy as np
+import os
 
 from gym_pybullet_drones.envs.BaseRLAviary import BaseRLAviary
 from gym_pybullet_drones.utils.enums import DroneModel, Physics, ActionType, ObservationType
-
+from stable_baselines3 import PPO
 from gymnasium import spaces
 
+from constants import *
 
-ACTIONTYPE = ActionType.PID
+
+
+def load_policy(path="results"):
+    """
+    Load policy interactively
+    
+    :param path: Path to policy save directory
+    """ 
+    results = sorted(os.listdir(path), reverse=True)
+    inpnum = None
+    while inpnum == None:
+        inp = input(f"pick which directory to use ([0]-{len(results)}): \n{list(enumerate(results))}\n")
+        try:
+            inpnum = int(inp)
+        except:
+            inpnum = 0 if inp == "" else None
+        
+        if inpnum != None and 0 <= inpnum < len(results):
+            break
+        else: 
+            inpnum = None
+            print("not valid num")
+    print(f"{inpnum} -> {results[inpnum]} chosen.")
+    model = PPO.load(os.path.join(path, results[inpnum], "best_model.zip"))
+    return model
+    #TODO: extract info on num of agents
 
 class CustomAviary(BaseRLAviary):
     """Multi-agent RL problem: leader-follower."""
@@ -15,18 +42,18 @@ class CustomAviary(BaseRLAviary):
 
     def __init__(self,
                  drone_model: DroneModel=DroneModel.CF2X,
-                 num_drones: int=2,
+                 num_drones: int=NUM_AGENTS,
                  neighbourhood_radius: float=np.inf,
                  initial_xyzs=None,
                  initial_rpys=None,
                  physics: Physics=Physics.PYB,
                  pyb_freq: int = 240,
-                 ctrl_freq: int = 30,
+                 ctrl_freq: int = CTRL_FREQ,
                  gui=False,
                  record=False,
                  obs: ObservationType=ObservationType.KIN,
                  ):
-        act = ActionType.PID
+        act = ACTIONTYPE
         """Initialization of a multi-agent RL environment.
 
         Using the generic multi-agent RL superclass.
@@ -73,11 +100,12 @@ class CustomAviary(BaseRLAviary):
                          obs=obs,
                          act=act
                          )
-        # self.TARGET_POS = self.INIT_XYZS + np.array([[0,0,1/(i+1)] for i in range(num_drones)])
-        self.TARGET_POS = np.array([
-                [0,0,2],
-                [1,0,2],
-            ])
+        self.TARGET_POS = self.INIT_XYZS + np.array([[0,0,1/(i+1)] for i in range(num_drones)])
+        # FIXME: WHy does target_pos not work?
+        # self.TARGET_POS = np.array([
+        #         [0,0,2],
+        #         [1,0,2],
+        #     ])
         # print(f"TARGET POSITION: {self.TARGET_POS}")
 
     ################################################################################
@@ -145,6 +173,37 @@ class CustomAviary(BaseRLAviary):
             return False
 
     ################################################################################
+    
+    def _observationSpace(self):
+        """Returns the observation space of the environment.
+
+        Returns
+        -------
+        ndarray
+            A Box() of shape (NUM_DRONES,H,W,4) or (NUM_DRONES,12) depending on the observation type.
+
+        """
+        ############################################################
+        #### OBS SPACE OF SIZE 12
+        #### Observation vector ### X        Y        Z       Q1   Q2   Q3   Q4   R       P       Y       VX       VY       VZ       WX       WY       WZ
+        lo = -np.inf
+        hi = np.inf
+        obs_lower_bound = np.array([[lo,lo,0, lo,lo,lo,lo,lo,lo,lo,lo,lo] for i in range(self.NUM_DRONES)])
+        obs_upper_bound = np.array([[hi,hi,hi,hi,hi,hi,hi,hi,hi,hi,hi,hi] for i in range(self.NUM_DRONES)])
+        #### Add action buffer to observation space ################
+        act_lo = -1
+        act_hi = +1
+        for i in range(self.ACTION_BUFFER_SIZE):
+            if self.ACT_TYPE in [ActionType.RPM, ActionType.VEL]:
+                obs_lower_bound = np.hstack([obs_lower_bound, np.array([[act_lo,act_lo,act_lo,act_lo] for i in range(self.NUM_DRONES)])])
+                obs_upper_bound = np.hstack([obs_upper_bound, np.array([[act_hi,act_hi,act_hi,act_hi] for i in range(self.NUM_DRONES)])])
+            elif self.ACT_TYPE==ActionType.PID:
+                obs_lower_bound = np.hstack([obs_lower_bound, np.array([[act_lo,act_lo,act_lo] for i in range(self.NUM_DRONES)])])
+                obs_upper_bound = np.hstack([obs_upper_bound, np.array([[act_hi,act_hi,act_hi] for i in range(self.NUM_DRONES)])])
+            elif self.ACT_TYPE in [ActionType.ONE_D_RPM, ActionType.ONE_D_PID]:
+                obs_lower_bound = np.hstack([obs_lower_bound, np.array([[act_lo] for i in range(self.NUM_DRONES)])])
+                obs_upper_bound = np.hstack([obs_upper_bound, np.array([[act_hi] for i in range(self.NUM_DRONES)])])
+        return spaces.Box(low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32)
 
     def _computeInfo(self):
         """Computes the current info dict(s).
