@@ -7,7 +7,9 @@ import cflib.crtp
 from cflib.crazyflie.swarm import CachedCfFactory
 from observation_module import OBS_MODULES
 from constants import *
+
 import custom_env
+
 
 # from cflib.crazyflie.swarm import Swarm
 # from cflib.crazyflie.commander import Commander
@@ -151,7 +153,7 @@ class Runtime() :
             now = time.perf_counter()
             if now - start > duration:
                 break
-            sleep_t = last_tick-now+target_period
+            sleep_t = target_period-(last_tick-now)
             if sleep_t < 0:
                 # TODO: maybe infer max rate, from sleep_t
                 i_overstep_period += 1 

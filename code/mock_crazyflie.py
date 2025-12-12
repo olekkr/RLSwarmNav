@@ -31,7 +31,26 @@ class MockLogConfig:
         fake = {
             "stateEstimate.x": np.random.uniform(-1,1),
             "stateEstimate.y": np.random.uniform(-1,1),
-            "stateEstimate.z": np.random.uniform(0,2)
+            "stateEstimate.z": np.random.uniform(0,2),
+            
+            "stateEstimate.vx": np.random.uniform(-1,1),
+            "stateEstimate.vy": np.random.uniform(-1,1),
+            "stateEstimate.vz": np.random.uniform(-1,1),
+            
+            "stateEstimate.roll": np.random.uniform(-1,1),
+            "stateEstimate.pitch": np.random.uniform(-1,1),
+            "stateEstimate.yaw": np.random.uniform(-1,1),
+
+            "stateEstimateZ.rateRoll": np.random.uniform(-1,1),
+            "stateEstimateZ.ratePitch": np.random.uniform(-1,1),
+            "stateEstimateZ.rateYaw": np.random.uniform(-1,1),
+
+            "stateEstimateZ.qw": np.random.uniform(-1,1),
+            "stateEstimateZ.qx": np.random.uniform(-1,1),
+            "stateEstimateZ.qy": np.random.uniform(-1,1),
+            "stateEstimateZ.qz": np.random.uniform(-1,1),
+
+            
         }
         if self._callback:
             self._callback(time.time(), fake, MockLogConfig("[MOCK] logconfig", 20))
