@@ -19,7 +19,11 @@ import custom_env
 
 
 
-train_env = custom_env.CustomAviary(num_drones=NUM_AGENTS)
+train_env = make_vec_env(
+    custom_env.CustomAviary, 
+    env_kwargs={"num_drones":NUM_AGENTS}, 
+    n_envs=6, 
+    seed=0)
 eval_env = custom_env.CustomAviary(num_drones=NUM_AGENTS)
 
 
@@ -45,9 +49,9 @@ eval_callback = EvalCallback(eval_env,
                                 render=False)
 
 print("training...")
-model.learn(total_timesteps=int(1e5),
+model.learn(total_timesteps=int(1e6),
                 callback=eval_callback,
-                log_interval=100)
+                log_interval=10000)
 
 
 

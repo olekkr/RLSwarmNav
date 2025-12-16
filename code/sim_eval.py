@@ -46,7 +46,7 @@ for i in range((test_env.EPISODE_LEN_SEC+2)*test_env.CTRL_FREQ):
                                     deterministic=True
                                     )
     obs, reward, terminated, truncated, info = test_env.step(action)
-    print(obs.shape, "aaaaaaaaaaa")
+    print(action)
     obs2 = obs.squeeze()
     act2 = action.squeeze()
     # print("\tAction", action, "\tReward:", reward, "\tTerminated:", terminated, "\tTruncated:", truncated)
@@ -62,8 +62,10 @@ for i in range((test_env.EPISODE_LEN_SEC+2)*test_env.CTRL_FREQ):
     #         control=np.zeros(12)
     #         )
     test_env.render()
-    print(terminated)
+    # print(terminated)
     sync(i, start, test_env.CTRL_TIMESTEP)
     if terminated:
         obs = test_env.reset(seed=42, options={})
+
+print(test_env.TARGET_POS)
 test_env.close
