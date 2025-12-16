@@ -35,19 +35,9 @@ class Drone:
         self.lc = Commander(scf.cf)
         self.mc = MotionCommander(scf.cf)
 
-
-
-
-        # lg_pos.data_received_cb.add_callback(self._update_state)
         self.obs_mods = [o().cf_init(scf) for o in OBS_MODULES ]
         self.update_obs()
     
-
-    # def _update_state(self, time, data, lg_conf):
-    #     self.obs[0] = data["stateEstimate.x"]
-    #     self.obs[1] = data["stateEstimate.y"]
-    #     self.obs[2] = data["stateEstimate.z"]
-
     def update_obs(self):
         self.data = np.concat([m.data for m in self.obs_mods])
 
@@ -65,11 +55,9 @@ def _start(scf, drone:Drone):
 
 def _stop(_, drone:Drone):
     drone.lc.send_notify_setpoint_stop()
-    # drone.lc.send_velocity_world_setpoint(0,0,-0.2,0)
     drone.mc.land()
     for o in drone.obs_mods:
         o.stop()
-    # drone.lg_state.stop()
 
 def _act(_, drone:Drone):
     if ACTIONTYPE == ActionType.PID:
@@ -93,7 +81,6 @@ class Runtime() :
 
         self.policy = custom_env.load_policy()
         self.started = False
-        # self.obs = np.zeros_like(self.policy.observation_space)
 
     def _init_drone(self, scf, uri):
         drone = Drone(scf)
@@ -117,10 +104,7 @@ class Runtime() :
     def _collect_obs(self): 
         for d in self.drones:
             d.update_obs()
-        # FIXME: this is too jank
-        # need to insert drone into obs_mods so obs_mods can edit .data
         self.obs = np.stack([d.data for d in self.drones])
-        # self.obs = np.stack([np.concat([m.data for m in d.obs_mods]) for d in self.drones])
         
     def _step(self):
         self._collect_obs()
@@ -155,7 +139,6 @@ class Runtime() :
                 break
             sleep_t = target_period-(last_tick-now)
             if sleep_t < 0:
-                # TODO: maybe infer max rate, from sleep_t
                 i_overstep_period += 1 
                 sleep_t = 0 
 

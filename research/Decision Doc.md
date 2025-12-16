@@ -22,7 +22,7 @@ Decided to use high level absolute position controller as a fallback in case of 
 2025-11-03 Decided to use high-level controller for control, 
 - which means i don need to use a physics engine i can just use a kinematic simulation.
 - 
-## TODO:
+## Todo:
 ~~* [ ] Make a modified version of the pybullet environement in [link](https://github.com/utiasDSL/gym-pybullet-drones). (make single drone hover with PPO)~~
 * [ ] Read the craazyflie *get started* docs
 ~~* [ ] Port the CrazyFlie attitude -> abs_attitude PID controller into new env ~~

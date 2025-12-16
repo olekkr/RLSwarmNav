@@ -9,7 +9,6 @@ world_size = 10
 
 class DroneSim(gym.Env):
     def __init__(self, render_mode = None): 
-        #TODO: add sphere space
         self.action_space = gym.spaces.Box(-1,1, [3]) # simple XYZ coordinates defining movement step 
         self.observation_space = gym.spaces.Box(-world_size, world_size, [3]) # simple XYZ coordinates
         self.random = np.random.default_rng(seed=None)
@@ -40,8 +39,6 @@ class DroneSim(gym.Env):
         return  (np.linalg.norm(self.old_state) - np.linalg.norm(self.state)).item()
 
     def _init_renderer(self, render_mode):
-        # TODO: decompose renderer out of DroneSim class
-        # TODO: add more efficent renderer based on PyQtGraph or done staticly - (after the training)
         self.render_mode = render_mode
         if self.render_mode == None: 
             return
