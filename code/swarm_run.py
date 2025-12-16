@@ -117,8 +117,6 @@ class Runtime() :
     def _collect_obs(self): 
         for d in self.drones:
             d.update_obs()
-        # FIXME: this is too jank
-        # need to insert drone into obs_mods so obs_mods can edit .data
         self.obs = np.stack([d.data for d in self.drones])
         # self.obs = np.stack([np.concat([m.data for m in d.obs_mods]) for d in self.drones])
         
@@ -155,7 +153,6 @@ class Runtime() :
                 break
             sleep_t = target_period-(last_tick-now)
             if sleep_t < 0:
-                # TODO: maybe infer max rate, from sleep_t
                 i_overstep_period += 1 
                 sleep_t = 0 
 

@@ -33,7 +33,6 @@ def load_policy(path="results"):
     print(f"{inpnum} -> {results[inpnum]} chosen.")
     model = PPO.load(os.path.join(path, results[inpnum], "best_model.zip"))
     return model
-    #TODO: extract info on num of agents
 
 class CustomAviary(BaseRLAviary):
     """Multi-agent RL problem: leader-follower."""
@@ -101,12 +100,6 @@ class CustomAviary(BaseRLAviary):
                          act=act
                          )
         self.TARGET_POS = self.INIT_XYZS + np.array([[0,0,1/(i+1)] for i in range(num_drones)])
-        # FIXME: WHy does target_pos not work?
-        # self.TARGET_POS = np.array([
-        #         [0,0,2],
-        #         [1,0,2],
-        #     ])
-        # print(f"TARGET POSITION: {self.TARGET_POS}")
 
     ################################################################################
 
@@ -120,7 +113,7 @@ class CustomAviary(BaseRLAviary):
             The reward.
 
         """
-        # TODO: needs to take into account  dist from other drones.
+        # TODO: needs to take into account dist from other drones.
         states = np.array([self._getDroneStateVector(i) for i in range(self.NUM_DRONES)])
         ret = 0
         for i in range(self.NUM_DRONES):
@@ -139,7 +132,7 @@ class CustomAviary(BaseRLAviary):
             Whether the current episode is done.
 
         """ 
-        # TODO: 
+        # TODO: change
         states = np.array([self._getDroneStateVector(i) for i in range(self.NUM_DRONES)])
         dist = 0
         for i in range(self.NUM_DRONES):
@@ -160,9 +153,10 @@ class CustomAviary(BaseRLAviary):
             Whether the current episode timed out.
 
         """
-        # TODO: 
+        # TODO: change
         states = np.array([self._getDroneStateVector(i) for i in range(self.NUM_DRONES)])
         for i in range(self.NUM_DRONES):
+            # TODO: USE BOX.contains here:
             if (abs(states[i][0]) > 2.0 or abs(states[i][1]) > 2.0 or states[i][2] > 2.0 # Truncate when a drones is too far away
              or abs(states[i][7]) > .4 or abs(states[i][8]) > .4 # Truncate when a drone is too tilted
             ):
@@ -179,13 +173,12 @@ class CustomAviary(BaseRLAviary):
 
         Returns
         -------
-        ndarray
-            A Box() of shape (NUM_DRONES,H,W,4) or (NUM_DRONES,12) depending on the observation type.
 
         """
         ############################################################
         #### OBS SPACE OF SIZE 12
         #### Observation vector ### X        Y        Z       Q1   Q2   Q3   Q4   R       P       Y       VX       VY       VZ       WX       WY       WZ
+        # TODO: plug in obs-mod system
         lo = -np.inf
         hi = np.inf
         obs_lower_bound = np.array([[lo,lo,0, lo,lo,lo,lo,lo,lo,lo,lo,lo] for i in range(self.NUM_DRONES)])
@@ -205,6 +198,45 @@ class CustomAviary(BaseRLAviary):
                 obs_upper_bound = np.hstack([obs_upper_bound, np.array([[act_hi] for i in range(self.NUM_DRONES)])])
         return spaces.Box(low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32)
 
+    def _computeObs(self):
+        """Returns the current observation of the environment.
+
+        Returns
+        -------
+        ndarray
+            A Box() of shape (NUM_DRONES,H,W,4) or (NUM_DRONES,12) depending on the observation type.
+
+        """
+        if self.OBS_TYPE == ObservationType.RGB:
+            if self.step_counter%self.IMG_CAPTURE_FREQ == 0:
+                for i in range(self.NUM_DRONES):
+                    self.rgb[i], self.dep[i], self.seg[i] = self._getDroneImages(i,
+                                                                                 segmentation=False
+                                                                                 )
+                    #### Printing observation to PNG frames example ############
+                    if self.RECORD:
+                        self._exportImage(img_type=ImageType.RGB,
+                                          img_input=self.rgb[i],
+                                          path=self.ONBOARD_IMG_PATH+"drone_"+str(i),
+                                          frame_num=int(self.step_counter/self.IMG_CAPTURE_FREQ)
+                                          )
+            return np.array([self.rgb[i] for i in range(self.NUM_DRONES)]).astype('float32')
+        elif self.OBS_TYPE == ObservationType.KIN:
+            ############################################################
+            #### OBS SPACE OF SIZE 12
+            obs_12 = np.zeros((self.NUM_DRONES,12))
+            for i in range(self.NUM_DRONES):
+                #obs = self._clipAndNormalizeState(self._getDroneStateVector(i))
+                obs = self._getDroneStateVector(i)
+                obs_12[i, :] = np.hstack([obs[0:3], obs[7:10], obs[10:13], obs[13:16]]).reshape(12,)
+            ret = np.array([obs_12[i, :] for i in range(self.NUM_DRONES)]).astype('float32')
+            #### Add action buffer to observation #######################
+            for i in range(self.ACTION_BUFFER_SIZE):
+                ret = np.hstack([ret, np.array([self.action_buffer[i][j, :] for j in range(self.NUM_DRONES)])])
+            return ret
+            ############################################################
+        else:
+            print("[ERROR] in BaseRLAviary._computeObs()")
     def _computeInfo(self):
         """Computes the current info dict(s).
 
