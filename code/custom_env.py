@@ -167,7 +167,7 @@ class CustomAviary(BaseRLAviary):
              or abs(states[i][7]) > .4 or abs(states[i][8]) > .4 # Truncate when a drone is too tilted
             ):
                 return True
-        if self.step_counter/self.PYB_FREQ > self.EPISODE_LEN_SEC:
+        if self.step_counter/self.PYB_FREQ > self.EPISODE_LEN_SEC: # Trunctate when too much time has elapsed
             return True
         else:
             return False

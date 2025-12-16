@@ -10,7 +10,7 @@ class ObsMod:
         self.name = name
         self.size = size 
         self.data = [0 for i in range(size)]
-        self.log_conf = dummyLogConfig("dummyconfig", 1)
+        # self.log_conf = dummyLogConfig("dummyconfig", 1)
 
     def __len__(self):
         return self.size 
@@ -19,10 +19,9 @@ class ObsMod:
         return f"(ObsMod:{self.name})"
 
     def start (self):
-        self.log_conf.start()
-
+        pass
     def stop(self):
-        self.log_conf.stop()
+        pass
 
     def cf_init(self, scf):
         return self
@@ -33,7 +32,6 @@ class SimpleObs(ObsMod):
         super().__init__("Pos", len(keys))
         self.TOCName = TOCName
         self.keys = keys
-        
 
     def cf_init(self, scf):
         log_conf = LogConfig(self.TOCName, 1000/CTRL_FREQ)
@@ -46,6 +44,19 @@ class SimpleObs(ObsMod):
 
     def _cb(self, time, data, lg_conf):
         self.data = [data[f"{self.TOCName}.{k}"] for k in self.keys]
+
+class TargetPosObs(ObsMod):
+    def __init__(self, position):
+        super().__init__("TargetPosition",3)
+        if position == None:
+            self.data = BOUNDING_BOX.sample()
+        else:
+            raise UserWarning("using position is not implemented yet")
+        self.data = position
+    def start (self):
+        pass
+    def stop(self):
+        pass
 
 class PosObs(SimpleObs):
     def __init__(self):
@@ -68,10 +79,10 @@ class ZeroObs(ObsMod):
         super().__init__(f"{size} zeros", size)
         self.data = [0 for i in range(size)]
 
-    def cf_init(self,scf): 
-        self.log_conf = dummyLogConfig("dummy",1)
-        return self
-
+    def start (self):
+        pass
+    def stop(self):
+        pass
 
 class dummyLogConfig ():
     def __init__(self,name, rate):
@@ -83,10 +94,12 @@ class dummyLogConfig ():
         pass
 
 OBS_MODULES = [
-    partial(PosObs), 
+    partial(PosObs),
     partial(RPYObs),
     partial(VelObs),
     # partial(QUATObs),
     partial(AngRateObs),
-    partial(ZeroObs, 45)]
+    partial(TargetPosObs, None),
+    partial(ZeroObs, 42),
+]
 
