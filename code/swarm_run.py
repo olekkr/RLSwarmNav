@@ -1,3 +1,9 @@
+"""Swarm runtime: wrap Crazyflie swarm connections and run a policy.
+
+This module provides a lightweight `Drone` wrapper around a Crazyflie
+connection and a `Runtime` that runs a control policy across a swarm.
+"""
+
 import time
 import numpy as np 
 
@@ -17,6 +23,7 @@ import custom_env
 # from cflib.crazyflie.log import LogConfig
 
 
+# Use mock Crazyflie classes when running in DEBUG mode (no real hardware)
 if DEBUG:
     from mock_crazyflie import MockSwarm as Swarm 
     from mock_crazyflie import MockCommander as Commander 
@@ -31,47 +38,52 @@ else:
 
 
 class Drone:
+    """Per-connection wrapper providing command interfaces and observations.
+
+    """
     def __init__(self, scf):
+        # Command interfaces for this drone instance
         self.lc = Commander(scf.cf)
         self.mc = MotionCommander(scf.cf)
 
-
-
-
-        # lg_pos.data_received_cb.add_callback(self._update_state)
+        # Initialize observation modules attached to the Crazyflie
         self.obs_mods = [o().cf_init(scf) for o in OBS_MODULES ]
+        # Populate initial observation buffer
         self.update_obs()
-    
-
-    # def _update_state(self, time, data, lg_conf):
-    #     self.obs[0] = data["stateEstimate.x"]
-    #     self.obs[1] = data["stateEstimate.y"]
-    #     self.obs[2] = data["stateEstimate.z"]
 
     def update_obs(self):
+        """Pull and combine observations from all attached modules.
+
+        Result is stored in `self.data` as a single NumPy array per drone.
+        """
         self.data = np.concat([m.data for m in self.obs_mods])
 
     def update_act(self, act):
         self.act = act
         
 
-    
+######################## DRONE callbacks ########################
+# functions used via swarm.parallel to send commands to the drones.
+# All helpers are intedended to be called via the swarm parallel API
 def _start(scf, drone:Drone):
+    """Start per-drone observation modules and perform takeoff.
+    """
     for o in drone.obs_mods:
         o.start()
     drone.mc.take_off(0.4)
     # drone.lg_state.start()
-    
 
 def _stop(_, drone:Drone):
+    """Stop motion, observation modules and land for a single drone.
+    """
     drone.lc.send_notify_setpoint_stop()
-    # drone.lc.send_velocity_world_setpoint(0,0,-0.2,0)
     drone.mc.land()
     for o in drone.obs_mods:
         o.stop()
-    # drone.lg_state.stop()
 
 def _act(_, drone:Drone):
+    """Apply stored action to the drone using the configured interface.
+    """
     if ACTIONTYPE == ActionType.PID:
         drone.lc.send_position_setpoint(*drone.act)
     elif ACTIONTYPE == ActionType.VEL:
@@ -79,28 +91,40 @@ def _act(_, drone:Drone):
     else: 
         print("not supported action type")
         exit()
-
+####################################################################
 
 
 class Runtime() : 
+    """Run a control policy across a Crazyflie swarm.
+
+    Creates `Drone` wrappers for each URI, starts/stops the swarm,
+    collects observations, invokes the policy, and dispatches actions.
+    Runs the control loop via the `run` method.
+    """
+
     def __init__(self, URIs=URIs):
         self.swarm = Swarm(URIs, factory=CachedCfFactory(rw_cache='./cache'))
         self.swarm.open_links()
         self.droneArg = {}
         self.drones = []
 
+        # Initialize drone wrappers in parallel
         self.swarm.parallel_safe(self._init_drone, {u:[u] for u in URIs})
 
+        # Load control policy (e.g., from custom environment / RL agent)
         self.policy = custom_env.load_policy()
         self.started = False
-        # self.obs = np.zeros_like(self.policy.observation_space)
 
     def _init_drone(self, scf, uri):
+        """Create and register a `Drone` wrapper for a swarm connection.
+        """
         drone = Drone(scf)
         self.drones.append(drone)
         self.droneArg[uri] = [drone]
 
     def _start_drones(self):
+        """Reset estimators, prime observations, then start all drones.
+        """
         self.swarm.reset_estimators() 
         self._collect_obs()
         try:
@@ -111,16 +135,26 @@ class Runtime() :
             self.stop_drones()
         
     def stop_drones(self):
+        """Request all drones to stop and land via the swarm API."""
         self.swarm.parallel(_stop, self.droneArg)
         self.started = False
 
     def _collect_obs(self): 
+        """Update observations for every drone and stack into `self.obs`.
+
+        The stacked array has shape (n_drones, obs_dim) and is passed to
+        the policy for action prediction.
+        """
         for d in self.drones:
             d.update_obs()
         self.obs = np.stack([d.data for d in self.drones])
-        # self.obs = np.stack([np.concat([m.data for m in d.obs_mods]) for d in self.drones])
         
     def _step(self):
+        """Perform one control loop step: observe, predict, and dispatch.
+        Observcations are collected from all drones;
+        The policy's `predict` is called; 
+        The resulting actions are sent to each drone.
+        """
         self._collect_obs()
         action, _states = self.policy.predict(self.obs, deterministic=True)
         action = np.concat([action, np.zeros((len(action),1))], axis=1)
@@ -135,6 +169,10 @@ class Runtime() :
 
 
     def run(self, duration):
+        """Run the control loop for `duration` seconds.
+
+        Runs `_step` at `CTRL_FREQ` Hz for the specified duration.
+        """
         if not self.started:
             self._start_drones()
 
@@ -167,7 +205,7 @@ class Runtime() :
 
 
     def __del__(self):
-        # not sure if its the right magic
+        """Attempt to gracefully close swarm resources on object deletion."""
         print("exiting swarm")
         self.swarm.close_links()
         self.swarm.__exit__(None,None,None)
