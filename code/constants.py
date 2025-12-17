@@ -38,3 +38,6 @@ BOUNDING_BOX = Box( [-2,-2,0], [4,4,2])
 
 
 # TODO: # save config to file
+
+
+## Detached HEAD test
