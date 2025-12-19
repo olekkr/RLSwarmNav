@@ -56,6 +56,7 @@ class Drone:
 
         Result is stored in `self.data` as a single NumPy array per drone.
         """
+        # Concatenate data from all observation modules into one array
         self.data = np.concat([m.data for m in self.obs_mods])
 
     def update_act(self, act):
@@ -65,15 +66,16 @@ class Drone:
 ######################## DRONE callbacks ########################
 # functions used via swarm.parallel to send commands to the drones.
 # All helpers are intedended to be called via the swarm parallel API
-def _start(scf, drone:Drone):
+def _start(scf, drone):
     """Start per-drone observation modules and perform takeoff.
     """
+    # 
     for o in drone.obs_mods:
         o.start()
-    drone.mc.take_off(0.4)
-    # drone.lg_state.start()
 
-def _stop(_, drone:Drone):
+    drone.mc.take_off(0.4)
+
+def _stop(_, drone):
     """Stop motion, observation modules and land for a single drone.
     """
     drone.lc.send_notify_setpoint_stop()
@@ -81,7 +83,7 @@ def _stop(_, drone:Drone):
     for o in drone.obs_mods:
         o.stop()
 
-def _act(_, drone:Drone):
+def _act(_, drone):
     """Apply stored action to the drone using the configured interface.
     """
     if ACTIONTYPE == ActionType.PID:
@@ -142,8 +144,7 @@ class Runtime() :
     def _collect_obs(self): 
         """Update observations for every drone and stack into `self.obs`.
 
-        The stacked array has shape (n_drones, obs_dim) and is passed to
-        the policy for action prediction.
+        The stacked array has shape (n_drones, obs_dim)
         """
         for d in self.drones:
             d.update_obs()
@@ -157,7 +158,7 @@ class Runtime() :
         """
         self._collect_obs()
         action, _states = self.policy.predict(self.obs, deterministic=True)
-        action = np.concat([action, np.zeros((len(action),1))], axis=1)
+        action = np.concatenate([action, np.zeros((len(action),1))], axis=1)
         print(f"action: \n{action}, \nobservation: \n{self.obs}" )
         for d, a in zip(self.drones, action): 
             d.update_act(a)

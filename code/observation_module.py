@@ -4,6 +4,9 @@ from mock_crazyflie import MockLogConfig as LogConfig
 from constants import *
 from functools import partial
 
+# TODO:
+# need method to be called in _observationSpace to get the size of the observation space
+# need method to be called in _computeObs 
 
 class ObsMod:
     def __init__ (self, name, size):

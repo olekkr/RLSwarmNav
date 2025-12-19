@@ -2,6 +2,7 @@ import os
 
 from gym_pybullet_drones.utils.enums import ActionType, Physics
 from observation_module import *
+import numpy as np
 
 # use different channel for each dongle, for each dongle use different address.
 URIs = [
