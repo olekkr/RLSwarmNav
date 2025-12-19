@@ -42,3 +42,8 @@ BOUNDING_BOX = Box( [-2,-2,0], [4,4,2])
 
 
 ## Detached HEAD test
+
+
+
+# observationspace save:  """ observation space config: [functools.partial(<class 'observation_module.PosObs'>), functools.partial(<class 'observation_module.RPYObs'>), functools.partial(<class 'observation_module.VelObs'>), functools.partial(<class 'observation_module.AngRateObs'>), functools.partial(<class 'observation_module.TargetPosObs'>, None), functools.partial(<class 'observation_module.ZeroObs'>, 42)]
+"""

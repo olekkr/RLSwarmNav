@@ -14,8 +14,11 @@ from stable_baselines3.common.evaluation import evaluate_policy
 from gym_pybullet_drones.utils.Logger import Logger
 from gym_pybullet_drones.utils.utils import sync, str2bool
 
+import constants 
 from constants import * 
 import custom_env 
+
+
 
 
 
@@ -38,27 +41,47 @@ model = PPO('MlpPolicy',
             # tensorboard_log=filename+'/tb/',
             verbose=1)
 
-filename = os.path.join("results", 'save-'+datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
+custom_name = input("enter custom name (default: save-{timestamp} )\n") + "_"
+if custom_name == "":
+    filename = os.path.join("results", 'save-'+datetime.now().strftime("%Y.%m.%d.%H:%M:%S"))
+else: 
+    filename = os.path.join("results", custom_name+datetime.now().strftime("%Y.%m.%d.%H:%M:%S"))
+
+os.makedirs(filename, exist_ok=True)
+
+## Quick and dirty config savign for each result
+constants_save = os.path.join(filename, "constants.py-save")
+with open(constants_save, "w") as dst, open(constants.__file__, "r") as src:
+    dst.writelines(src.readlines())
+    dst.write("\n\n\n# observationspace save: ")
+    dst.writelines(f" \"\"\" observation space config: {OBS_MODULES}\n\"\"\"")
+
+
+
 eval_callback = EvalCallback(eval_env,
                                 # callback_on_new_best=callback_on_best,
                                 verbose=1,
                                 best_model_save_path=filename+'/',
                                 log_path=filename+'/',
-                                eval_freq=int(1000),
+                                eval_freq=int(100),
                                 deterministic=True,
                                 render=False)
 
 print("training...")
-model.learn(total_timesteps=int(1e6),
+model.learn(total_timesteps=int(1e7),
                 callback=eval_callback,
-                log_interval=10000)
+                log_interval=10000,
+                progress_bar=True)
 
 
 
 #### Save the model ########################################
 
 # TODO: add info on num of agents
+
 model_save_location = filename+'/final_model.zip'
 print(f"saving to: {model_save_location}")
 model.save(model_save_location)
+
+
 
