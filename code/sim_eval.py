@@ -39,12 +39,20 @@ test_env = custom_env.CustomAviary(gui=True,
 
 
 
-obs, info = test_env.reset(seed=0, options={})
+obs, info = test_env.reset(seed=1, options={})
 start = time.time()
 for i in range((test_env.EPISODE_LEN_SEC+2)*test_env.CTRL_FREQ):
     action, _states = policy.predict(obs,
                                     deterministic=True
                                     )
+
+    # FIXME: test:
+    # action = action* np.array( [
+    #                           [1,1,1],
+    #                           [1,1,-1],
+    #                           [1,1,-1],
+    #     ])
+
     obs, reward, terminated, truncated, info = test_env.step(action)
     print(action)
     obs2 = obs.squeeze()

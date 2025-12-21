@@ -117,12 +117,18 @@ class CustomAviary(BaseRLAviary):
 
         """
         # TODO: needs to take into account dist from other drones.
+
         states = np.array([self._getDroneStateVector(i)
                           for i in range(self.NUM_DRONES)])
         ret = 0
         for i in range(self.NUM_DRONES):
-            ret += max(0, 2 -
-                       np.linalg.norm(self.TARGET_POS[i, :]-states[i][0:3])**4)
+            # reward for coming close to goal
+            ret += max(0, 2- np.linalg.norm(states[i][0:3]- self.TARGET_POS[i]) **4)
+            for ii in range(self.NUM_DRONES):
+                # penalty for getting near other drones 
+                # ret -= 150 * max(0, 0.02 - np.linalg.norm(states[i][0:3]- states[ii][0:3]) **4)
+                pass
+
 
         return ret
 
@@ -222,41 +228,22 @@ class CustomAviary(BaseRLAviary):
             A Box() of shape (NUM_DRONES,H,W,4) or (NUM_DRONES,12) depending on the observation type.
 
         """
-        if self.OBS_TYPE == ObservationType.RGB:
-            if self.step_counter % self.IMG_CAPTURE_FREQ == 0:
-                for i in range(self.NUM_DRONES):
-                    self.rgb[i], self.dep[i], self.seg[i] = self._getDroneImages(i,
-                                                                                 segmentation=False
-                                                                                 )
-                    #### Printing observation to PNG frames example ############
-                    if self.RECORD:
-                        self._exportImage(img_type=ImageType.RGB,
-                                          img_input=self.rgb[i],
-                                          path=self.ONBOARD_IMG_PATH +
-                                          "drone_"+str(i),
-                                          frame_num=int(
-                                              self.step_counter/self.IMG_CAPTURE_FREQ)
-                                          )
-            return np.array([self.rgb[i] for i in range(self.NUM_DRONES)]).astype('float32')
-        elif self.OBS_TYPE == ObservationType.KIN:
-            ############################################################
-            # OBS SPACE OF SIZE 12
-            obs_12 = np.zeros((self.NUM_DRONES, 12))
-            for i in range(self.NUM_DRONES):
-                # obs = self._clipAndNormalizeState(self._getDroneStateVector(i))
-                obs = self._getDroneStateVector(i)
-                obs_12[i, :] = np.hstack(
-                    [obs[0:3], obs[7:10], obs[10:13], obs[13:16]]).reshape(12,)
-            ret = np.array([obs_12[i, :]
-                           for i in range(self.NUM_DRONES)]).astype('float32')
-            #### Add action buffer to observation #######################
-            for i in range(self.ACTION_BUFFER_SIZE):
-                ret = np.hstack(
-                    [ret, np.array([self.action_buffer[i][j, :] for j in range(self.NUM_DRONES)])])
-            return ret
-            ############################################################
-        else:
-            print("[ERROR] in BaseRLAviary._computeObs()")
+        ############################################################
+        # OBS SPACE OF SIZE 12
+        obs_12 = np.zeros((self.NUM_DRONES, 12))
+        for i in range(self.NUM_DRONES):
+            # obs = self._clipAndNormalizeState(self._getDroneStateVector(i))
+            obs = self._getDroneStateVector(i)
+            obs_12[i, :] = np.hstack(
+                [obs[0:3], obs[7:10], obs[10:13], obs[13:16]]).reshape(12,)
+        ret = np.array([obs_12[i, :]
+                       for i in range(self.NUM_DRONES)]).astype('float32')
+        #### Add action buffer to observation #######################
+        for i in range(self.ACTION_BUFFER_SIZE):
+            ret = np.hstack(
+                [ret, np.array([self.action_buffer[i][j, :] for j in range(self.NUM_DRONES)])])
+        return ret
+        ############################################################
 
     def _computeInfo(self):
         """Computes the current info dict(s).

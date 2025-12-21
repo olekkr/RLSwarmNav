@@ -12,7 +12,7 @@ from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewar
 from stable_baselines3.common.evaluation import evaluate_policy
 
 from gym_pybullet_drones.utils.Logger import Logger
-from gym_pybullet_drones.utils.utils import sync, str2bool
+from gym_pybullet_drones.utils.utils import sync
 
 import constants 
 from constants import * 
@@ -25,7 +25,7 @@ import custom_env
 train_env = make_vec_env(
     custom_env.CustomAviary, 
     env_kwargs={"num_drones":NUM_AGENTS}, 
-    n_envs=6, 
+    n_envs=12, 
     seed=0)
 eval_env = custom_env.CustomAviary(num_drones=NUM_AGENTS)
 
@@ -68,7 +68,7 @@ eval_callback = EvalCallback(eval_env,
                                 render=False)
 
 print("training...")
-model.learn(total_timesteps=int(1e7),
+model.learn(total_timesteps=int(4e5),
                 callback=eval_callback,
                 log_interval=10000,
                 progress_bar=True)
