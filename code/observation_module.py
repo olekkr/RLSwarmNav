@@ -159,29 +159,10 @@ class ZeroObs(ObsMod):
     def __init__(self, size):
         super().__init__(size)
         self.name = f"{size} zeros"
-        self.data = [0 for i in range(size)]
+        self.data = np.zeros(size)
 
     def start (self):
         pass
     def stop(self):
         pass
 
-class dummyLogConfig ():
-    def __init__(self,name, rate):
-        pass
-    def start(self):
-        print("[DUMMY] START runned")
-        pass
-    def stop(self):
-        pass
-
-# OBS_MODULES = [
-#     partial(PosObs),
-#     partial(RPYObs),
-#     partial(VelObs),
-#     # partial(QUATObs),
-#     partial(AngRateObs),
-#     partial(TargetPosObs, None),
-#     partial(ZeroObs, 42),
-# ]
-#
