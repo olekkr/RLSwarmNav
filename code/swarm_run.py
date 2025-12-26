@@ -57,7 +57,7 @@ class Drone:
         Result is stored in `self.data` as a single NumPy array per drone.
         """
         # Concatenate data from all observation modules into one array
-        self.data = np.concat([m.data for m in self.obs_mods])
+        self.data = np.concat([m.data for m in self.obs_mods], axis=0)
 
     def update_act(self, act):
         self.act = act

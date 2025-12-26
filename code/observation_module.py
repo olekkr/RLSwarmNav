@@ -46,16 +46,16 @@ class SimpleObs(ObsMod):
         return self
 
     def _cb(self, time, data, lg_conf):
-        self.data = [data[f"{self.TOCName}.{k}"] for k in self.keys]
+        self.data = np.array([data[f"{self.TOCName}.{k}"] for k in self.keys]).flatten()
 
 class TargetPosObs(ObsMod):
     def __init__(self, position):
         super().__init__("TargetPosition",3)
-        if position == None:
+        if position is None:
             self.data = BOUNDING_BOX.sample()
         else:
             raise UserWarning("using position is not implemented yet")
-        self.data = position
+        # self.data = position
     def start (self):
         pass
     def stop(self):
