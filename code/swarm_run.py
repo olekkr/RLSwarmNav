@@ -11,7 +11,7 @@ from gym_pybullet_drones.utils.enums import ActionType
 
 import cflib.crtp
 from cflib.crazyflie.swarm import CachedCfFactory
-from observation_module import OBS_MODULES
+from observation_module import ObsFactory
 from constants import *
 
 import custom_env
@@ -35,7 +35,7 @@ else:
     from cflib.positioning.motion_commander import MotionCommander
     from cflib.crazyflie.log import LogConfig
 
-
+OBS_FACTORY = ObsFactory(OBS_SIGNATURE)
 
 class Drone:
     """Per-connection wrapper providing command interfaces and observations.
@@ -47,7 +47,9 @@ class Drone:
         self.mc = MotionCommander(scf.cf)
 
         # Initialize observation modules attached to the Crazyflie
-        self.obs_mods = [o().cf_init(scf) for o in OBS_MODULES ]
+        # self.obs_mods = [o().cf_init(scf) for o in OBS_MODULES ]
+        self.obs_container = OBS_FACTORY.generate().cf_init(scf)
+
         # Populate initial observation buffer
         self.update_obs()
 
@@ -57,7 +59,7 @@ class Drone:
         Result is stored in `self.data` as a single NumPy array per drone.
         """
         # Concatenate data from all observation modules into one array
-        self.data = np.concat([m.data for m in self.obs_mods], axis=0)
+        self.data = self.obs_container.get_data()
 
     def update_act(self, act):
         self.act = act
@@ -70,18 +72,20 @@ def _start(scf, drone):
     """Start per-drone observation modules and perform takeoff.
     """
     # 
-    for o in drone.obs_mods:
-        o.start()
+    drone.obs_container.start()
+    # for o in drone.obs_mods:
+    #     o.start()
 
-    drone.mc.take_off(0.4)
+    drone.mc.take_off(0.4) # TODO: start height randomizer
 
 def _stop(_, drone):
     """Stop motion, observation modules and land for a single drone.
     """
     drone.lc.send_notify_setpoint_stop()
     drone.mc.land()
-    for o in drone.obs_mods:
-        o.stop()
+    drone.obs_container.stop()
+    # for o in drone.obs_mods:
+    #     o.stop()
 
 def _act(_, drone):
     """Apply stored action to the drone using the configured interface.
@@ -158,7 +162,8 @@ class Runtime() :
         """
         self._collect_obs()
         action, _states = self.policy.predict(self.obs, deterministic=True)
-        action = np.concatenate([action, np.zeros((len(action),1))], axis=1)
+        # action = np.concatenate([action, np.ones((len(action),1))], axis=1)
+        action[:,3]=1
         print(f"action: \n{action}, \nobservation: \n{self.obs}" )
         for d, a in zip(self.drones, action): 
             d.update_act(a)
@@ -221,5 +226,6 @@ if __name__ == "__main__":
 
     drone = Runtime() 
     drone.run(4)
+
 
 

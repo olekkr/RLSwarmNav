@@ -32,11 +32,11 @@ class MockLogConfig:
             "stateEstimate.x": np.random.uniform(-1,1),
             "stateEstimate.y": np.random.uniform(-1,1),
             "stateEstimate.z": np.random.uniform(0,2),
-            
+
             "stateEstimate.vx": np.random.uniform(-1,1),
             "stateEstimate.vy": np.random.uniform(-1,1),
             "stateEstimate.vz": np.random.uniform(-1,1),
-            
+
             "stateEstimate.roll": np.random.uniform(-1,1),
             "stateEstimate.pitch": np.random.uniform(-1,1),
             "stateEstimate.yaw": np.random.uniform(-1,1),
@@ -50,7 +50,7 @@ class MockLogConfig:
             "stateEstimateZ.qy": np.random.uniform(-1,1),
             "stateEstimateZ.qz": np.random.uniform(-1,1),
 
-            
+
         }
         if self._callback:
             self._callback(time.time(), fake, MockLogConfig("[MOCK] logconfig", 20))
@@ -64,10 +64,10 @@ class MockCommander:
         pass 
 
     def send_position_setpoint(self, x, y, z, yaw):
-        print(f"[MOCK] setpoint: x={x:.2f}, y={y:.2f}, z={z:.2f}")
+        print(f"[MOCK] setpoint: x={x:.2f}, y={y:.2f}, z={z:.2f}, yaw={yaw:.2f}")
 
     def send_velocity_world_setpoint(self, vx, vy, vz, vYaw):
-        print(f"[MOCK] VEL-setpoint: vx={vx:.2f}, vy={vy:.2f}, vvz={vz:.2f}, vYaw={yaw:.2f}")
+        print(f"[MOCK] VEL-setpoint: vx={vx:.2f}, vy={vy:.2f}, vvz={vz:.2f}, vYaw={vYaw:.2f}")
 
     def send_notify_setpoint_stop(self):
         print("[MOCK] stop setpoint stream")

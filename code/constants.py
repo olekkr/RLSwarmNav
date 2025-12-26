@@ -9,9 +9,9 @@ URIs = [
     "radio://0/100/2M/E7E7E7E701",
     "radio://0/100/2M/E7E7E7E702",
     "radio://0/100/2M/E7E7E7E703",
-    # "radio://0/100/2M/E7E7E7E704",
-    # "radio://0/100/2M/E7E7E7E705",
-    # "radio://0/100/2M/E7E7E7E706",
+    "radio://0/100/2M/E7E7E7E704",
+    "radio://0/100/2M/E7E7E7E705",
+    "radio://0/100/2M/E7E7E7E706",
     # "radio://0/100/2M/E7E7E7E708",
     # "radio://0/100/2M/E7E7E7E709",
     # "radio://0/100/2M/E7E7E7E710"
@@ -31,11 +31,19 @@ class Box:
 
 # TODO: # BUILDNAME = ""
 ACTIONTYPE = ActionType.VEL
-# ACTIONTYPE = ActionType.PID
 NUM_AGENTS = len(URIs) 
 CTRL_FREQ = 30
 DEBUG = True
 BOUNDING_BOX = Box( [-2,-2,0], [4,4,2])
+OBS_SIGNATURE = [
+    ("PosObs",{}),
+    ("RPYObs",{}),
+    ("VelObs",{}),
+    # ("QUATObs",{}),
+    ("AngRateObs",{}),
+    ("TargetPosObs", {"position": None}),
+    ("ZeroObs", {"size":57}),
+]
 
 
 

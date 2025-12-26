@@ -1,19 +1,76 @@
 
+import numpy as np
 # from cflib.crazyflie.log import LogConfig
 from mock_crazyflie import MockLogConfig as LogConfig
 from constants import *
-from functools import partial
+# from functools import partial
 
-# TODO:
-# need method to be called in _observationSpace to get the size of the observation space
-# need method to be called in _computeObs 
+# TODO:refractor to use container
+# TODO:need a hook to bind observations to each other on a single drone
+# TODO:need a hook to bind observations to each other across drones
+# TODO:need method to be called in _observationSpace to get the size of the observation space
+# TODO:need method to be called in _computeObs 
+
+class ObsFactory:
+    def __init__(self, mod_call_sig):
+        self.mod_call_sig = mod_call_sig
+        self.containers = []
+
+    def generate(self):
+        """construct and return the modules for the single drone"""
+        modules = [globals()[n](**a) for (n, a) in self.mod_call_sig ]
+        container = ObsContainer(modules)
+        self.containers.append(container)
+
+        # HERE WE DO INTER-DRONE-link
+        return container
+        
+
+class ObsContainer: 
+    def __init__(self, mods):
+        """ construct container and link intra-drone obs """
+        self.modules = mods
+
+        # HERE WE DO INTRA-DRONE-link
+        for m in mods: 
+            m.intra_link(mods)
+    
+    def cf_init(self, scf):
+        """ initializes container to be used in IRL swarm"""
+        for o in self.modules:
+            o.cf_init(scf)
+        return self
+
+    def get_data(self):
+        # TODO: do manual update on mods here
+        for m in self.modules:
+            m.manual_update_data()
+        return np.concat([m.data for m in self.modules], axis=0).flatten()
+
+    def start(self):
+        for m in self.modules:
+            m.start()
+
+    def stop(self):
+        for m in self.modules:
+            m.stop()
+
+
+        
 
 class ObsMod:
     def __init__ (self, name, size):
         self.name = name
         self.size = size 
         self.data = [0 for i in range(size)]
-        # self.log_conf = dummyLogConfig("dummyconfig", 1)
+        self.log_conf = dummyLogConfig("dummyconfig", 1)
+
+    def intra_link(self, modules):
+        pass
+    # def inter_link(self, containers):
+    #     pass
+    def manual_update_data(self):
+        pass
 
     def __len__(self):
         return self.size 
@@ -22,8 +79,10 @@ class ObsMod:
         return f"(ObsMod:{self.name})"
 
     def start (self):
+        self.log_conf.start()
         pass
     def stop(self):
+        self.log_conf.stop()
         pass
 
     def cf_init(self, scf):
@@ -55,7 +114,7 @@ class TargetPosObs(ObsMod):
             self.data = BOUNDING_BOX.sample()
         else:
             raise UserWarning("using position is not implemented yet")
-        # self.data = position
+
     def start (self):
         pass
     def stop(self):
@@ -96,13 +155,13 @@ class dummyLogConfig ():
     def stop(self):
         pass
 
-OBS_MODULES = [
-    partial(PosObs),
-    partial(RPYObs),
-    partial(VelObs),
-    # partial(QUATObs),
-    partial(AngRateObs),
-    partial(TargetPosObs, None),
-    partial(ZeroObs, 42),
-]
-
+# OBS_MODULES = [
+#     partial(PosObs),
+#     partial(RPYObs),
+#     partial(VelObs),
+#     # partial(QUATObs),
+#     partial(AngRateObs),
+#     partial(TargetPosObs, None),
+#     partial(ZeroObs, 42),
+# ]
+#
