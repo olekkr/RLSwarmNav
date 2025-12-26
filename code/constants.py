@@ -36,13 +36,14 @@ CTRL_FREQ = 30
 DEBUG = True
 BOUNDING_BOX = Box( [-2,-2,0], [4,4,2])
 OBS_SIGNATURE = [
+    ("RelTargetPos", {"position": None}),
     ("PosObs",{}),
     ("RPYObs",{}),
     ("VelObs",{}),
     # ("QUATObs",{}),
     ("AngRateObs",{}),
     ("TargetPosObs", {"position": None}),
-    ("ZeroObs", {"size":57}),
+    ("ZeroObs", {"size":54}),
 ]
 
 

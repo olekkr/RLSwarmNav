@@ -1,6 +1,7 @@
 
 import numpy as np
 # from cflib.crazyflie.log import LogConfig
+from mock_crazyflie import MockLogConfig
 from mock_crazyflie import MockLogConfig as LogConfig
 from constants import *
 # from functools import partial
@@ -33,7 +34,7 @@ class ObsContainer:
 
         # HERE WE DO INTRA-DRONE-link
         for m in mods: 
-            m.intra_link(mods)
+            m.intra_link(self)
     
     def cf_init(self, scf):
         """ initializes container to be used in IRL swarm"""
@@ -55,18 +56,25 @@ class ObsContainer:
         for m in self.modules:
             m.stop()
 
+    def intra_query(self, module_name):
+        mod_found = False 
+        for m in self.modules:
+            if m.name == module_name:
+                mod_found = True 
+                return m.data 
+        if not mod_found: 
+            raise Exception("query did not match a obsModule")
 
-        
 
 class ObsMod:
-    def __init__ (self, name, size):
-        self.name = name
+    def __init__ (self, size):
+        self.name = self.__class__.__name__
         self.size = size 
         self.data = [0 for i in range(size)]
-        self.log_conf = dummyLogConfig("dummyconfig", 1)
+        self.log_conf = MockLogConfig("dummyconfig", 1)
 
-    def intra_link(self, modules):
-        pass
+    def intra_link(self, parent_container: ObsContainer):
+        self.parent_container  = parent_container 
     # def inter_link(self, containers):
     #     pass
     def manual_update_data(self):
@@ -89,9 +97,33 @@ class ObsMod:
         return self
 
 
+class TargetPosObs(ObsMod):
+    def __init__(self, position):
+        super().__init__(3)
+        if position is None:
+            self.data = BOUNDING_BOX.sample()
+        else:
+            raise Exception("not implemented")
+
+    def start (self):
+        pass
+    def stop(self):
+        pass
+
+class RelTargetPos(TargetPosObs):
+    def __init__(self, position):
+        super().__init__(position)
+        self.target_pos = self.data
+
+    def manual_update_data(self):
+        currpos = self.parent_container.intra_query("PosObs")
+        targetpos = self.parent_container.intra_query("TargetPosObs")
+        self.data = targetpos - currpos
+
 class SimpleObs(ObsMod):
-    def __init__(self, name, TOCName, keys):
-        super().__init__("Pos", len(keys))
+    def __init__(self,  TOCName, keys):
+        super().__init__(len(keys))
+        self.name = self.__class__.__name__
         self.TOCName = TOCName
         self.keys = keys
 
@@ -107,38 +139,26 @@ class SimpleObs(ObsMod):
     def _cb(self, time, data, lg_conf):
         self.data = np.array([data[f"{self.TOCName}.{k}"] for k in self.keys]).flatten()
 
-class TargetPosObs(ObsMod):
-    def __init__(self, position):
-        super().__init__("TargetPosition",3)
-        if position is None:
-            self.data = BOUNDING_BOX.sample()
-        else:
-            raise UserWarning("using position is not implemented yet")
-
-    def start (self):
-        pass
-    def stop(self):
-        pass
-
 class PosObs(SimpleObs):
     def __init__(self):
-        super().__init__("POS", "stateEstimate", ["x","y","z"])
+        super().__init__("stateEstimate", ["x","y","z"])
 class VelObs(SimpleObs):
     def __init__(self):
-        super().__init__("VEL", "stateEstimate", ["vx","vy","vz"])
+        super().__init__("stateEstimate", ["vx","vy","vz"])
 class RPYObs(SimpleObs):
     def __init__(self):
-        super().__init__("RPY", "stateEstimate", ["roll","pitch","yaw"])
+        super().__init__("stateEstimate", ["roll","pitch","yaw"])
 class AngRateObs(SimpleObs):
     def __init__(self):
-        super().__init__("ANG_RATE", "stateEstimateZ", ["rateRoll","ratePitch","rateYaw"])
+        super().__init__("stateEstimateZ", ["rateRoll","ratePitch","rateYaw"])
 class QUATObs(SimpleObs):
     def __init__(self):
-        super().__init__("ANG_RATE", "stateEstimate", ["qw","qx","qy", "qz"])
+        super().__init__("stateEstimate", ["qw","qx","qy", "qz"])
 
 class ZeroObs(ObsMod):
     def __init__(self, size):
-        super().__init__(f"{size} zeros", size)
+        super().__init__(size)
+        self.name = f"{size} zeros"
         self.data = [0 for i in range(size)]
 
     def start (self):
