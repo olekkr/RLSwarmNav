@@ -51,7 +51,7 @@ class Drone:
         self.obs_container = OBS_FACTORY.generate().cf_init(scf)
 
         # Populate initial observation buffer
-        self.update_obs()
+        self.update_obs() # FIXME: does this work?
 
     def update_obs(self):
         """Pull and combine observations from all attached modules.

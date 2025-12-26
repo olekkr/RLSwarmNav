@@ -4,10 +4,8 @@ import numpy as np
 from mock_crazyflie import MockLogConfig
 from mock_crazyflie import MockLogConfig as LogConfig
 from constants import *
-# from functools import partial
 
-# TODO:refractor to use container
-# TODO:need a hook to bind observations to each other on a single drone
+
 # TODO:need a hook to bind observations to each other across drones
 # TODO:need method to be called in _observationSpace to get the size of the observation space
 # TODO:need method to be called in _computeObs 
@@ -22,8 +20,7 @@ class ObsFactory:
         modules = [globals()[n](**a) for (n, a) in self.mod_call_sig ]
         container = ObsContainer(modules)
         self.containers.append(container)
-
-        # HERE WE DO INTER-DRONE-link
+        container.inter_link(self.containers)
         return container
         
 
@@ -32,14 +29,13 @@ class ObsContainer:
         """ construct container and link intra-drone obs """
         self.modules = mods
 
-        # HERE WE DO INTRA-DRONE-link
         for m in mods: 
             m.intra_link(self)
     
     def cf_init(self, scf):
         """ initializes container to be used in IRL swarm"""
-        for o in self.modules:
-            o.cf_init(scf)
+        for m in self.modules:
+            m.cf_init(scf)
         return self
 
     def get_data(self):
@@ -63,20 +59,37 @@ class ObsContainer:
                 mod_found = True 
                 return m.data 
         if not mod_found: 
-            raise Exception("query did not match a obsModule")
+            raise Exception(f"query: {module_name} did not match a obsModule")
+
+    def inter_link(self, containers):
+        self.peer_containers = containers
+
+    def inter_query(self, module_name):
+        result = []
+        mods_found = False
+        for c in self.peer_containers:
+            for m in c.modules:
+                if m.name == module_name:
+                    mods_found = True 
+                    result.append(m.data) 
+            if not mods_found: 
+                raise Exception(f"query: {module_name} did not match a obsModule")
+        print(self.peer_containers, "AAAA")
+        return np.stack(result)
+
+
 
 
 class ObsMod:
     def __init__ (self, size):
         self.name = self.__class__.__name__
         self.size = size 
-        self.data = [0 for i in range(size)]
+        self.data = np.zeros(size)
         self.log_conf = MockLogConfig("dummyconfig", 1)
 
     def intra_link(self, parent_container: ObsContainer):
         self.parent_container  = parent_container 
-    # def inter_link(self, containers):
-    #     pass
+ 
     def manual_update_data(self):
         pass
 
@@ -119,6 +132,19 @@ class RelTargetPos(TargetPosObs):
         currpos = self.parent_container.intra_query("PosObs")
         targetpos = self.parent_container.intra_query("TargetPosObs")
         self.data = targetpos - currpos
+
+class RelDronePos(ObsMod):
+    def __init__(self, size):
+        super().__init__(size)
+    
+    def manual_update_data(self):
+        self.size = 3 * len(self.parent_container.peer_containers)
+        positions = self.parent_container.inter_query("PosObs")
+        ego_pos = self.parent_container.intra_query("PosObs")
+        print(positions, ego_pos, self.size)
+        self.data = positions - ego_pos
+
+
 
 class SimpleObs(ObsMod):
     def __init__(self,  TOCName, keys):
