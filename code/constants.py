@@ -44,7 +44,9 @@ OBS_SIGNATURE = [
     ("AngRateObs",{}),
     ("TargetPosObs", {"position": None}),
     ("ZeroObs", {"size":36}),
-    ("RelDronePos", {"size": NUM_AGENTS*3})
+    ("ZeroObs", {"size":15}),
+    # ("RelDronePos", {"size": 3*(NUM_AGENTS**2)})
+    
 ]
 
 
