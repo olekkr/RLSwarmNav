@@ -54,7 +54,7 @@ constants_save = os.path.join(filename, "constants.py-save")
 with open(constants_save, "w") as dst, open(constants.__file__, "r") as src:
     dst.writelines(src.readlines())
     dst.write("\n\n\n# observationspace save: ")
-    dst.writelines(f" \"\"\" observation space config: {OBS_MODULES}\n\"\"\"")
+    dst.writelines(f" \"\"\" observation space config: {OBS_SIGNATURE}\n\"\"\"")
 
 
 
@@ -68,7 +68,7 @@ eval_callback = EvalCallback(eval_env,
                                 render=False)
 
 print("training...")
-model.learn(total_timesteps=int(4e5),
+model.learn(total_timesteps=int(4e4), # FIXME: change this
                 callback=eval_callback,
                 log_interval=10000,
                 progress_bar=True)

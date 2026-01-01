@@ -202,22 +202,22 @@ class CustomAviary(BaseRLAviary):
         #### Add action buffer to observation space ################
         act_lo = -1
         act_hi = +1
-        for i in range(self.ACTION_BUFFER_SIZE):
-            if self.ACT_TYPE in [ActionType.RPM, ActionType.VEL]:
-                obs_lower_bound = np.hstack([obs_lower_bound, np.array(
-                    [[act_lo, act_lo, act_lo, act_lo] for i in range(self.NUM_DRONES)])])
-                obs_upper_bound = np.hstack([obs_upper_bound, np.array(
-                    [[act_hi, act_hi, act_hi, act_hi] for i in range(self.NUM_DRONES)])])
-            elif self.ACT_TYPE == ActionType.PID:
-                obs_lower_bound = np.hstack([obs_lower_bound, np.array(
-                    [[act_lo, act_lo, act_lo] for i in range(self.NUM_DRONES)])])
-                obs_upper_bound = np.hstack([obs_upper_bound, np.array(
-                    [[act_hi, act_hi, act_hi] for i in range(self.NUM_DRONES)])])
-            elif self.ACT_TYPE in [ActionType.ONE_D_RPM, ActionType.ONE_D_PID]:
-                obs_lower_bound = np.hstack([obs_lower_bound, np.array(
-                    [[act_lo] for i in range(self.NUM_DRONES)])])
-                obs_upper_bound = np.hstack([obs_upper_bound, np.array(
-                    [[act_hi] for i in range(self.NUM_DRONES)])])
+        # for i in range(self.ACTION_BUFFER_SIZE):
+        #     if self.ACT_TYPE in [ActionType.RPM, ActionType.VEL]:
+        #         obs_lower_bound = np.hstack([obs_lower_bound, np.array(
+        #             [[act_lo, act_lo, act_lo, act_lo] for i in range(self.NUM_DRONES)])])
+        #         obs_upper_bound = np.hstack([obs_upper_bound, np.array(
+        #             [[act_hi, act_hi, act_hi, act_hi] for i in range(self.NUM_DRONES)])])
+        #     elif self.ACT_TYPE == ActionType.PID:
+        #         obs_lower_bound = np.hstack([obs_lower_bound, np.array(
+        #             [[act_lo, act_lo, act_lo] for i in range(self.NUM_DRONES)])])
+        #         obs_upper_bound = np.hstack([obs_upper_bound, np.array(
+        #             [[act_hi, act_hi, act_hi] for i in range(self.NUM_DRONES)])])
+        #     elif self.ACT_TYPE in [ActionType.ONE_D_RPM, ActionType.ONE_D_PID]:
+        #         obs_lower_bound = np.hstack([obs_lower_bound, np.array(
+        #             [[act_lo] for i in range(self.NUM_DRONES)])])
+        #         obs_upper_bound = np.hstack([obs_upper_bound, np.array(
+        #             [[act_hi] for i in range(self.NUM_DRONES)])])
         return spaces.Box(low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32)
 
     def _computeObs(self):
@@ -239,9 +239,9 @@ class CustomAviary(BaseRLAviary):
         ret = np.array([obs_12[i, :]
                        for i in range(self.NUM_DRONES)]).astype('float32')
         #### Add action buffer to observation #######################
-        for i in range(self.ACTION_BUFFER_SIZE):
-            ret = np.hstack(
-                [ret, np.array([self.action_buffer[i][j, :] for j in range(self.NUM_DRONES)])])
+        # for i in range(self.ACTION_BUFFER_SIZE):
+        # ret = np.hstack(
+        #     [ret, np.array([self.action_buffer[i][j, :] for j in range(self.NUM_DRONES)])])
         return ret
         ############################################################
 
