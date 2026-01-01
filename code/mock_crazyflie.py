@@ -45,10 +45,10 @@ class MockLogConfig:
             "stateEstimateZ.ratePitch": np.random.uniform(-1,1),
             "stateEstimateZ.rateYaw": np.random.uniform(-1,1),
 
-            "stateEstimateZ.qw": np.random.uniform(-1,1),
-            "stateEstimateZ.qx": np.random.uniform(-1,1),
-            "stateEstimateZ.qy": np.random.uniform(-1,1),
-            "stateEstimateZ.qz": np.random.uniform(-1,1),
+            "stateEstimate.qw": np.random.uniform(-1,1),
+            "stateEstimate.qx": np.random.uniform(-1,1),
+            "stateEstimate.qy": np.random.uniform(-1,1),
+            "stateEstimate.qz": np.random.uniform(-1,1),
 
 
         }
