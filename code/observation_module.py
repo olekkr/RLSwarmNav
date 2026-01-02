@@ -42,6 +42,7 @@ class ObsContainer:
         # TODO: do manual update on mods here
         for m in self.modules:
             m.manual_update_data()
+        print([m.data for m in self.modules])
         return np.concat([m.data for m in self.modules], axis=0).flatten()
 
     def start(self):
@@ -74,7 +75,7 @@ class ObsContainer:
                     result.append(m.data) 
             if not mods_found: 
                 raise Exception(f"query: {module_name} did not match a obsModule")
-        print(self.peer_containers, "AAAA")
+        # print(self.peer_containers, "AAAA")
         return np.stack(result)
 
 
@@ -133,16 +134,16 @@ class RelTargetPos(TargetPosObs):
         targetpos = self.parent_container.intra_query("TargetPosObs")
         self.data = targetpos - currpos
 
-class RelDronePos(ObsMod):
-    def __init__(self, size):
-        super().__init__(size)
-    
-    def manual_update_data(self):
-        self.size = 3 * len(self.parent_container.peer_containers)
-        positions = self.parent_container.inter_query("PosObs")
-        ego_pos = self.parent_container.intra_query("PosObs")
-        print(positions, ego_pos, self.size)
-        self.data = positions - ego_pos
+# class RelDronePos(ObsMod): # going to do this later
+#     def __init__(self, size):
+#         super().__init__(size)
+#
+#     def manual_update_data(self):
+#         self.size = 3 * len(self.parent_container.peer_containers)
+#         positions = self.parent_container.inter_query("PosObs")
+#         ego_pos = self.parent_container.intra_query("PosObs")
+#         # print(positions, ego_pos, self.size)
+#         self.data = positions - ego_pos
 
 
 
