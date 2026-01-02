@@ -68,7 +68,7 @@ eval_callback = EvalCallback(eval_env,
                                 render=False)
 
 print("training...")
-model.learn(total_timesteps=int(1e5), # FIXME: change this
+model.learn(total_timesteps=int(1e6), # FIXME: change this
                 callback=eval_callback,
                 log_interval=10000,
                 progress_bar=True)
