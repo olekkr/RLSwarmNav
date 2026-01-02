@@ -123,10 +123,15 @@ class CustomAviary(BaseRLAviary):
         ret = 0
         for i in range(self.NUM_DRONES):
             # reward for coming close to goal
-            ret += max(0, 2- np.linalg.norm(states[i][0:3]- self.TARGET_POS[i]) **4)
+            # ret += max(0, 2- np.linalg.norm(states[i][0:3]- self.TARGET_POS[i]) **4)
+            ret += max(0, 2 - np.linalg.norm(self.TARGET_POS[i,:]-states[i][0:3])**4)
+
             for ii in range(self.NUM_DRONES):
                 # penalty for getting near other drones 
                 # ret -= 150 * max(0, 0.02 - np.linalg.norm(states[i][0:3]- states[ii][0:3]) **4)
+                # Simpler version: 
+                ret += max(0, 2 - np.linalg.norm(states[ii][0:3]-states[i][0:3])**4)
+                # ret -= 2.5 if np.linalg.norm(states[i][0:3]- states[ii][0:3]) < 1 else 0 
                 pass
 
 
