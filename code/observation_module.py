@@ -4,6 +4,7 @@ import numpy as np
 from mock_crazyflie import MockLogConfig
 from mock_crazyflie import MockLogConfig as LogConfig
 from constants import *
+from constants import BOUNDING_BOX
 
 
 # TODO:need a hook to bind observations to each other across drones
