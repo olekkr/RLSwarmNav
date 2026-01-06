@@ -22,12 +22,12 @@ policy = custom_env.load_policy()
 test_env = custom_env.CustomAviary(gui=True,
                                 num_drones=NUM_AGENTS)
 
-# test_env_nogui = custom_env.CustomAviary(num_drones=NUM_AGENTS)
+test_env_nogui = custom_env.CustomAviary(num_drones=NUM_AGENTS)
 
-# mean_reward, std_reward = evaluate_policy(policy,
-#                                               test_env_nogui,
-#                                               n_eval_episodes=10)
-# print(mean_reward, std_reward)
+mean_reward, std_reward = evaluate_policy(policy,
+                                              test_env_nogui,
+                                              n_eval_episodes=10)
+print(mean_reward, std_reward)
 
 
 
@@ -39,9 +39,9 @@ test_env = custom_env.CustomAviary(gui=True,
 
 
 
-obs, info = test_env.reset(seed=1, options={})
+obs, info = test_env.reset(seed=0, options={})
 start = time.time()
-for i in range((test_env.EPISODE_LEN_SEC+2)*test_env.CTRL_FREQ):
+for i in range((test_env.EPISODE_LEN_SEC+5)*test_env.CTRL_FREQ):
     action, _states = policy.predict(obs,
                                     deterministic=True
                                     )
@@ -73,6 +73,7 @@ for i in range((test_env.EPISODE_LEN_SEC+2)*test_env.CTRL_FREQ):
     # print(terminated)
     sync(i, start, test_env.CTRL_TIMESTEP)
     if terminated:
+        print("Terminated!")
         obs = test_env.reset(seed=42, options={})
 
 print(test_env.TARGET_POS)
