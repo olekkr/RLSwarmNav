@@ -4,6 +4,8 @@ from gym_pybullet_drones.utils.enums import ActionType, Physics
 # from observation_module import *
 import numpy as np
 
+np.set_printoptions(precision=3, sign=" ", suppress=True)
+
 # use different channel for each dongle, for each dongle use different address.
 URIs = [
     "radio://0/100/2M/E7E7E7E701",
@@ -34,14 +36,14 @@ ACTIONTYPE = ActionType.VEL
 NUM_AGENTS = len(URIs) 
 CTRL_FREQ = 30
 DEBUG = True
-BOUNDING_BOX = Box( [-2,-2,0], [4,4,2])
+BOUNDING_BOX = Box( [-2,-2,0.3], [4,4,2])
 OBS_SIGNATURE = [
     ("PosObs",{}),
     ("QUATObs",{}),
     ("RPYObs",{}),
     ("VelObs",{}),
     ("AngRateObs",{}),
-    ("TargetPosObs", {"position": None}),
+    # ("TargetPosObs", {"position": None}),
     # ("RelTargetPos", {"position": None}),
     # ("ZeroObs", {"size":36}),
     # ("RelDronePos", {"size": NUM_AGENTS*3})

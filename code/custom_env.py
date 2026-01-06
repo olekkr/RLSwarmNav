@@ -45,7 +45,6 @@ class CustomAviary(BaseRLAviary):
     ###########################################################################
 
     def __init__(self,
-                 obs_signature,
                  drone_model: DroneModel = DroneModel.CF2X,
                  num_drones: int = NUM_AGENTS,
                  neighbourhood_radius: float = np.inf,
@@ -59,39 +58,11 @@ class CustomAviary(BaseRLAviary):
                  obs: ObservationType = ObservationType.KIN,
                  ):
         act = ACTIONTYPE
-        """Initialization of a multi-agent RL environment.
-
-        Using the generic multi-agent RL superclass.
-
-        Parameters
-        ----------
-        drone_model : DroneModel, optional
-            The desired drone type (detailed in an .urdf file in folder `assets`).
-        num_drones : int, optional
-            The desired number of drones in the aviary.
-        neighbourhood_radius : float, optional
-            Radius used to compute the drones' adjacency matrix, in meters.
-        initial_xyzs: ndarray | None, optional
-            (NUM_DRONES, 3)-shaped array containing the initial XYZ position of the drones.
-        initial_rpys: ndarray | None, optional
-            (NUM_DRONES, 3)-shaped array containing the initial orientations of the drones (in radians).
-        physics : Physics, optional
-            The desired implementation of PyBullet physics/custom dynamics.
-        pyb_freq : int, optional
-            The frequency at which PyBullet steps (a multiple of ctrl_freq).
-        ctrl_freq : int, optional
-            The frequency at which the environment steps.
-        gui : bool, optional
-            Whether to use PyBullet's GUI.
-        record : bool, optional
-            Whether to save a video of the simulation.
-        obs : ObservationType, optional
-            The type of observation space (kinematic information or vision)
-        act : ActionType, optional
-            The type of action space (1 or 3D; RPMS, thurst and torques, or waypoint with PID control)
-
-        """
         self.EPISODE_LEN_SEC = 15
+        initial_xyzs = np.array([BOUNDING_BOX.sample() for _ in range(NUM_AGENTS)])
+
+        self.TARGET_POS =  np.array([[0, 0, 1/(i+1)] for i in range(num_drones)])
+
         super().__init__(drone_model=drone_model,
                          num_drones=num_drones,
                          neighbourhood_radius=neighbourhood_radius,
@@ -105,12 +76,8 @@ class CustomAviary(BaseRLAviary):
                          obs=obs,
                          act=act
                          )
-        self.obs_fact = observation_module.ObsFactory(obs_signature)
-        self.obs_containers = [self.obs_fact.generate() for _ in range(num_drones) ]
-        self.TARGET_POS = np.array([c.intra_query("TargetPosObs") for c in self.obs_containers])
-        print(f"Target pos: {self.TARGET_POS}. ")
-        self.TARGET_POS = self.INIT_XYZS 
-        # self.TARGET_POS =  np.array([[0, 0, 1/(i+1)] for i in range(num_drones)])
+        # print(f"Target pos: {self.TARGET_POS}. \n INIT_XYZS:\n{self.INIT_XYZS}")
+
 
     ###########################################################################
 

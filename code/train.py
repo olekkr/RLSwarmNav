@@ -24,10 +24,10 @@ import custom_env
 
 train_env = make_vec_env(
     custom_env.CustomAviary, 
-    env_kwargs={"obs_signature":constants.OBS_SIGNATURE, "num_drones":NUM_AGENTS}, 
-    n_envs=12, 
+    env_kwargs={"num_drones":NUM_AGENTS}, 
+    n_envs=24, 
     seed=0)
-eval_env = custom_env.CustomAviary(constants.OBS_SIGNATURE, num_drones=NUM_AGENTS)
+eval_env = custom_env.CustomAviary(num_drones=NUM_AGENTS)
 
 
 print('[INFO] Action space:', train_env.action_space)
@@ -42,7 +42,7 @@ model = PPO('MlpPolicy',
             verbose=1)
 
 custom_name = input("enter custom name (default: save-{timestamp} )\n") + "_"
-if custom_name == "":
+if custom_name == "_":
     filename = os.path.join("results", 'save-'+datetime.now().strftime("%Y.%m.%d.%H:%M:%S"))
 else: 
     filename = os.path.join("results", custom_name+datetime.now().strftime("%Y.%m.%d.%H:%M:%S"))
@@ -68,7 +68,7 @@ eval_callback = EvalCallback(eval_env,
                                 render=False)
 
 print("training...")
-model.learn(total_timesteps=int(2e6), # FIXME: change this
+model.learn(total_timesteps=int(4e5), # FIXME: change this
                 callback=eval_callback,
                 log_interval=10000,
                 progress_bar=True)

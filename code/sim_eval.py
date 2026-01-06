@@ -20,7 +20,6 @@ import custom_env
 policy = custom_env.load_policy()
 
 test_env = custom_env.CustomAviary(
-    OBS_SIGNATURE,
     gui=True,
     num_drones=NUM_AGENTS)
 
