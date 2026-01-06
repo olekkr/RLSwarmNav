@@ -9,6 +9,8 @@ from gymnasium import spaces
 
 from constants import *
 
+import observation_module
+
 
 def load_policy(path="results"):
     """
@@ -43,6 +45,7 @@ class CustomAviary(BaseRLAviary):
     ###########################################################################
 
     def __init__(self,
+                 obs_signature,
                  drone_model: DroneModel = DroneModel.CF2X,
                  num_drones: int = NUM_AGENTS,
                  neighbourhood_radius: float = np.inf,
@@ -102,8 +105,12 @@ class CustomAviary(BaseRLAviary):
                          obs=obs,
                          act=act
                          )
-        self.TARGET_POS = self.INIT_XYZS + \
-            np.array([[0, 0, 1/(i+1)] for i in range(num_drones)])
+        self.obs_fact = observation_module.ObsFactory(obs_signature)
+        self.obs_containers = [self.obs_fact.generate() for _ in range(num_drones) ]
+        self.TARGET_POS = np.array([c.intra_query("TargetPosObs") for c in self.obs_containers])
+        print(f"Target pos: {self.TARGET_POS}. ")
+        self.TARGET_POS = self.INIT_XYZS 
+        # self.TARGET_POS =  np.array([[0, 0, 1/(i+1)] for i in range(num_drones)])
 
     ###########################################################################
 

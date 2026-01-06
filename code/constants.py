@@ -1,7 +1,7 @@
 import os 
 
 from gym_pybullet_drones.utils.enums import ActionType, Physics
-from observation_module import *
+# from observation_module import *
 import numpy as np
 
 # use different channel for each dongle, for each dongle use different address.
@@ -37,12 +37,12 @@ DEBUG = True
 BOUNDING_BOX = Box( [-2,-2,0], [4,4,2])
 OBS_SIGNATURE = [
     ("PosObs",{}),
-    # ("RelTargetPos", {"position": None}),
     ("QUATObs",{}),
     ("RPYObs",{}),
     ("VelObs",{}),
     ("AngRateObs",{}),
-    # ("TargetPosObs", {"position": None}),
+    ("TargetPosObs", {"position": None}),
+    # ("RelTargetPos", {"position": None}),
     # ("ZeroObs", {"size":36}),
     # ("RelDronePos", {"size": NUM_AGENTS*3})
 ]
@@ -50,6 +50,7 @@ OBS_SIGNATURE = [
 
 
 # TODO: # save config to file
+# 
 
 
 ## Detached HEAD test

@@ -24,10 +24,10 @@ import custom_env
 
 train_env = make_vec_env(
     custom_env.CustomAviary, 
-    env_kwargs={"num_drones":NUM_AGENTS}, 
+    env_kwargs={"obs_signature":constants.OBS_SIGNATURE, "num_drones":NUM_AGENTS}, 
     n_envs=12, 
     seed=0)
-eval_env = custom_env.CustomAviary(num_drones=NUM_AGENTS)
+eval_env = custom_env.CustomAviary(constants.OBS_SIGNATURE, num_drones=NUM_AGENTS)
 
 
 print('[INFO] Action space:', train_env.action_space)
