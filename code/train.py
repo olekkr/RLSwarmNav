@@ -77,7 +77,6 @@ model.learn(total_timesteps=int(2e6), # FIXME: change this
 
 #### Save the model ########################################
 
-# TODO: add info on num of agents
 
 model_save_location = filename+'/final_model.zip'
 print(f"saving to: {model_save_location}")

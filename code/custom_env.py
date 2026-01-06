@@ -88,7 +88,7 @@ class CustomAviary(BaseRLAviary):
             The type of action space (1 or 3D; RPMS, thurst and torques, or waypoint with PID control)
 
         """
-        self.EPISODE_LEN_SEC = 8
+        self.EPISODE_LEN_SEC = 15
         super().__init__(drone_model=drone_model,
                          num_drones=num_drones,
                          neighbourhood_radius=neighbourhood_radius,
@@ -116,7 +116,6 @@ class CustomAviary(BaseRLAviary):
             The reward.
 
         """
-        # TODO: needs to take into account dist from other drones.
 
         states = np.array([self._getDroneStateVector(i)
                           for i in range(self.NUM_DRONES)])
@@ -131,7 +130,7 @@ class CustomAviary(BaseRLAviary):
                 # ret -= 150 * max(0, 0.02 - np.linalg.norm(states[i][0:3]- states[ii][0:3]) **4)
                 # Simpler version: 
                 # ret -= max(0, 2 - np.linalg.norm(states[ii][0:3]-states[i][0:3])**4)
-                ret -= 2 if np.linalg.norm(states[i][0:3]- states[ii][0:3]) < 0.6 else 0 
+                ret -= 1 if np.linalg.norm(states[i][0:3]- states[ii][0:3]) < 0.3 else 0 
                 pass
 
 

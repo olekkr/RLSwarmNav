@@ -76,5 +76,5 @@ for i in range((test_env.EPISODE_LEN_SEC+5)*test_env.CTRL_FREQ):
         print("Terminated!")
         obs = test_env.reset(seed=42, options={})
 
-print(test_env.TARGET_POS)
+print(f"obs: {obs} \n target pos: {test_env.TARGET_POS}")
 test_env.close
