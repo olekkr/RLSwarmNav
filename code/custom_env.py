@@ -22,7 +22,7 @@ def load_policy(path="results"):
     inpnum = None
     while inpnum is None:
         inp = input(f"""
-pick which directory to use ([0]-{len(results)}): \n{list(enumerate(results))}
+pick which directory to use ([0]-{len(results)-1}): \n{list(enumerate(results))}
 """)
         try:
             inpnum = int(inp)
@@ -48,19 +48,17 @@ class CustomAviary(BaseRLAviary):
                  drone_model: DroneModel = DroneModel.CF2X,
                  num_drones: int = NUM_AGENTS,
                  neighbourhood_radius: float = np.inf,
-                 initial_xyzs=None,
+                 initial_xyzs=np.array([BOUNDING_BOX.sample() for _ in range(NUM_AGENTS)]),
                  initial_rpys=None,
                  physics: Physics = Physics.PYB,
-                 pyb_freq: int = 240,
-                 ctrl_freq: int = CTRL_FREQ,
+                 pyb_freq: int = 30,
+                 ctrl_freq: int = 30,
                  gui=False,
                  record=False,
                  obs: ObservationType = ObservationType.KIN,
                  ):
         act = ACTIONTYPE
         self.EPISODE_LEN_SEC = 15
-        initial_xyzs = np.array([BOUNDING_BOX.sample() for _ in range(NUM_AGENTS)])
-
         self.TARGET_POS =  np.array([[0, 0, 1/(i+1)] for i in range(num_drones)])
 
         super().__init__(drone_model=drone_model,
@@ -104,7 +102,7 @@ class CustomAviary(BaseRLAviary):
                 # ret -= 150 * max(0, 0.02 - np.linalg.norm(states[i][0:3]- states[ii][0:3]) **4)
                 # Simpler version: 
                 # ret -= max(0, 2 - np.linalg.norm(states[ii][0:3]-states[i][0:3])**4)
-                ret -= 1 if np.linalg.norm(states[i][0:3]- states[ii][0:3]) < 0.3 else 0 
+                # ret -= 1 if np.linalg.norm(states[i][0:3]- states[ii][0:3]) < 0.3 else 0 
                 pass
 
 
@@ -180,22 +178,6 @@ class CustomAviary(BaseRLAviary):
         #### Add action buffer to observation space ################
         act_lo = -1
         act_hi = +1
-        # for i in range(self.ACTION_BUFFER_SIZE):
-        #     if self.ACT_TYPE in [ActionType.RPM, ActionType.VEL]:
-        #         obs_lower_bound = np.hstack([obs_lower_bound, np.array(
-        #             [[act_lo, act_lo, act_lo, act_lo] for i in range(self.NUM_DRONES)])])
-        #         obs_upper_bound = np.hstack([obs_upper_bound, np.array(
-        #             [[act_hi, act_hi, act_hi, act_hi] for i in range(self.NUM_DRONES)])])
-        #     elif self.ACT_TYPE == ActionType.PID:
-        #         obs_lower_bound = np.hstack([obs_lower_bound, np.array(
-        #             [[act_lo, act_lo, act_lo] for i in range(self.NUM_DRONES)])])
-        #         obs_upper_bound = np.hstack([obs_upper_bound, np.array(
-        #             [[act_hi, act_hi, act_hi] for i in range(self.NUM_DRONES)])])
-        #     elif self.ACT_TYPE in [ActionType.ONE_D_RPM, ActionType.ONE_D_PID]:
-        #         obs_lower_bound = np.hstack([obs_lower_bound, np.array(
-        #             [[act_lo] for i in range(self.NUM_DRONES)])])
-        #         obs_upper_bound = np.hstack([obs_upper_bound, np.array(
-        #             [[act_hi] for i in range(self.NUM_DRONES)])])
         return spaces.Box(low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32)
 
     def _computeObs(self):
@@ -216,10 +198,6 @@ class CustomAviary(BaseRLAviary):
                 [obs[0:3], obs[7:10], obs[10:13], obs[13:16]]).reshape(12,)
         ret = np.array([obs_12[i, :]
                        for i in range(self.NUM_DRONES)]).astype('float32')
-        #### Add action buffer to observation #######################
-        # for i in range(self.ACTION_BUFFER_SIZE):
-        # ret = np.hstack(
-        #     [ret, np.array([self.action_buffer[i][j, :] for j in range(self.NUM_DRONES)])])
         return ret
         ############################################################
 

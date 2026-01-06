@@ -5,11 +5,13 @@ from datetime import datetime
 import argparse
 import gymnasium as gym
 import numpy as np
+import stable_baselines3
 import torch
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
 from stable_baselines3.common.evaluation import evaluate_policy
+from stable_baselines3.common.monitor import Monitor
 
 from gym_pybullet_drones.utils.Logger import Logger
 from gym_pybullet_drones.utils.utils import sync
@@ -25,7 +27,7 @@ import custom_env
 train_env = make_vec_env(
     custom_env.CustomAviary, 
     env_kwargs={"num_drones":NUM_AGENTS}, 
-    n_envs=24, 
+    n_envs=6, 
     seed=0)
 eval_env = custom_env.CustomAviary(num_drones=NUM_AGENTS)
 
