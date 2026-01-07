@@ -125,7 +125,7 @@ class CustomAviary(BaseRLAviary):
         dist = 0
         for i in range(self.NUM_DRONES):
             dist += np.linalg.norm(self.TARGET_POS[i, :]-states[i][0:3])
-        if dist < .0001:
+        if dist < .001:
             return True
         else:
             return False
@@ -146,7 +146,7 @@ class CustomAviary(BaseRLAviary):
                           for i in range(self.NUM_DRONES)])
         for i in range(self.NUM_DRONES):
             # TODO: USE BOX.contains here:
-            if (abs(states[i][0]) > 2.0 or abs(states[i][1]) > 2.0 or states[i][2] > 2.0  # Truncate when a drones is too far away
+            if (not BOUNDING_BOX.contains(states[i][0:3])  # Truncate when a drones is too far away
                 # Truncate when a drone is too tilted
                         or abs(states[i][7]) > .4 or abs(states[i][8]) > .4
                 ):
