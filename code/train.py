@@ -1,4 +1,3 @@
-
 import os
 import time
 from datetime import datetime
@@ -9,7 +8,7 @@ import stable_baselines3
 import torch
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import make_vec_env
-from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
+from stable_baselines3.common.callbacks import EvalCallback, CallbackList, CheckpointCallback
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.monitor import Monitor
 
@@ -20,29 +19,34 @@ import constants
 from constants import * 
 import custom_env 
 
+import psutil
 
-
-
+# tune n_envs to available CPUs
+N_ENVS = min(6, max(1, (os.cpu_count() or 2) - 1))
 
 train_env = make_vec_env(
-    custom_env.CustomAviary, 
-    env_kwargs={"num_drones":NUM_AGENTS}, 
-    n_envs=6, 
+    custom_env.CustomAviary,
+    env_kwargs={"num_drones": NUM_AGENTS, "gui": False, "record": False},
+    n_envs=N_ENVS,
     seed=0)
-eval_env = custom_env.CustomAviary(num_drones=NUM_AGENTS)
 
+# wrap eval env in Monitor to reduce logging overhead
+from stable_baselines3.common.monitor import Monitor
+eval_env = Monitor(custom_env.CustomAviary(num_drones=NUM_AGENTS, gui=False))
 
-print('[INFO] Action space:', train_env.action_space)
-print('[INFO] Observation space:', train_env.observation_space)
+device = "cuda" if torch.cuda.is_available() else "cpu"
+print(f"[INFO] Using device: {device}")
 
-
-
-#### Train the model #######################################
+# set device and (optionally) smaller n_steps for faster updates
 model = PPO('MlpPolicy',
             train_env,
-            # tensorboard_log=filename+'/tb/',
-            verbose=1)
+            verbose=1,
+            device=device,
+            n_steps=1024,  # tune: trade-off between throughput and update frequency
+            batch_size=256,
+            n_epochs=10)
 
+# ask name first so eval callback can write to chosen folder without blocking too often
 custom_name = input("enter custom name (default: save-{timestamp} )\n") + "_"
 if custom_name == "_":
     filename = os.path.join("results", 'save-'+datetime.now().strftime("%Y.%m.%d.%H:%M:%S"))
@@ -60,21 +64,27 @@ with open(constants_save, "w") as dst, open(constants.__file__, "r") as src:
 
 
 
-eval_callback = EvalCallback(eval_env,
-                                # callback_on_new_best=callback_on_best,
-                                verbose=1,
-                                best_model_save_path=filename+'/',
-                                log_path=filename+'/',
-                                eval_freq=int(100),
-                                deterministic=True,
-                                render=False)
+# less frequent evals and avoid saving every eval (set best_model_save_path=None to skip frequent model saves)
+eval_callback = CallbackList([EvalCallback(eval_env,
+                             callback_on_new_best=None,
+                             callback_after_eval=None,
+                             verbose=0,
+                             best_model_save_path=filename,  
+                             log_path=filename+'/',
+                             eval_freq=100_000//N_ENVS,           # run evaluation less often
+                             n_eval_episodes=5,
+                             deterministic=True,
+                             render=False),
+                CheckpointCallback(save_freq=500_000//N_ENVS,
+                                 save_path=filename,
+                                 name_prefix='rl_model_checkpoint')])
 
-print("training...")
-model.learn(total_timesteps=int(4e5), # FIXME: change this
+print("training...", N_ENVS)
+model.learn(total_timesteps=int(5e7), # FIXME: change this
                 callback=eval_callback,
-                log_interval=10000,
-                progress_bar=True)
-
+                log_interval=1000,
+                progress_bar=True
+                )
 
 
 #### Save the model ########################################

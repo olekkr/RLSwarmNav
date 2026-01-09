@@ -36,7 +36,7 @@ ACTIONTYPE = ActionType.VEL
 NUM_AGENTS = len(URIs) 
 CTRL_FREQ = 30
 DEBUG = True
-BOUNDING_BOX = Box( [-2,-2,0.3], [4,4,2])
+BOUNDING_BOX = Box( [-2,-2,0.1], [4,4,2])
 OBS_SIGNATURE = [
     ("PosObs",{}),
     ("QUATObs",{}),

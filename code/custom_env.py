@@ -59,9 +59,15 @@ class CustomAviary(BaseRLAviary):
                  ):
         act = ACTIONTYPE
         self.EPISODE_LEN_SEC = 15
-        self.TARGET_POS =  np.array([[i*(2/num_drones), 0, 0.5] for i in range(num_drones)]) # FIXME: temporary
-        initial_xyzs = np.array([p + [0.5,0,0] for p in self.TARGET_POS]) # FIXME: temporary
-        pos = initial_xyzs.copy()
+        defSpacing = 2*1.7/num_drones
+
+        initial_xyzs =  np.array([[0.15-2, i*defSpacing-1.85, 0.5] for i in range(num_drones)])
+        self.TARGET_POS = np.array([
+            [ defSpacing ,0,0.5],
+            [ defSpacing ,0,0.5],
+            [-defSpacing ,0,0.5]])
+        
+
         self.mystep_counter = 0
         for p in initial_xyzs:
             assert( BOUNDING_BOX.contains(p)), f"Initial pos {p} outside bounding box"
@@ -79,8 +85,9 @@ class CustomAviary(BaseRLAviary):
                          act=act
                          )
         # print(f"Target pos: {self.TARGET_POS}. \n INIT_XYZS:\n{self.INIT_XYZS}")
-        assert(all([(x == y for x, y in zip(a,b) ) for a, b in zip(pos, self.INIT_XYZS)])), \
+        assert(all([(x == y for x, y in zip(a,b) ) for a, b in zip(initial_xyzs, self.INIT_XYZS)])), \
         f"INIT_XYZS {self.INIT_XYZS} not equal to passed initial_xyzs {initial_xyzs}"
+        
 
     def reset(self,
               seed: int | None = None,
@@ -105,10 +112,10 @@ class CustomAviary(BaseRLAviary):
 
         states = np.array([self._getDroneStateVector(i)
                           for i in range(self.NUM_DRONES)])
-        ret = -1 * self.NUM_DRONES # small time penalty
+        # ret = 0.0
+        ret = -2 * self.NUM_DRONES # small time penalty
         for i in range(self.NUM_DRONES):
             # reward for coming close to goal
-            # ret += max(0, 2- np.linalg.norm(states[i][0:3]- self.TARGET_POS[i]) **4)
             ret += max(0, 2 - np.linalg.norm(self.TARGET_POS[i,:]-states[i][0:3])**4)
 
             for ii in range(self.NUM_DRONES):
@@ -118,7 +125,7 @@ class CustomAviary(BaseRLAviary):
                 # ret -= 150 * max(0, 0.02 - np.linalg.norm(states[i][0:3]- states[ii][0:3]) **4)
                 # Simpler version: 
                 # ret -= max(0, 2 - np.linalg.norm(states[ii][0:3]-states[i][0:3])**4)
-                ret -= 2 if np.linalg.norm(states[i][0:3]- states[ii][0:3]) < 0.03 else 0 
+                ret -= 2 if np.linalg.norm(states[i][0:3]- states[ii][0:3]) < 0.3 else 0 
                 pass
 
 
@@ -141,7 +148,7 @@ class CustomAviary(BaseRLAviary):
         dist = 0
         for i in range(self.NUM_DRONES):
             dist += np.linalg.norm(self.TARGET_POS[i, :]-states[i][0:3])
-        if dist < .01: # 1 cm tolerance to target
+        if dist < .01: # 10 cm tolerance to target
             return True
         else:
             return False
