@@ -59,8 +59,12 @@ class CustomAviary(BaseRLAviary):
                  ):
         act = ACTIONTYPE
         self.EPISODE_LEN_SEC = 15
-        self.TARGET_POS =  np.array([[0, 0, 1/(i+1)] for i in range(num_drones)])
-
+        self.TARGET_POS =  np.array([[i*(2/num_drones), 0, 0.5] for i in range(num_drones)]) # FIXME: temporary
+        initial_xyzs = np.array([p + [0.5,0,0] for p in self.TARGET_POS]) # FIXME: temporary
+        pos = initial_xyzs.copy()
+        self.mystep_counter = 0
+        for p in initial_xyzs:
+            assert( BOUNDING_BOX.contains(p)), f"Initial pos {p} outside bounding box"
         super().__init__(drone_model=drone_model,
                          num_drones=num_drones,
                          neighbourhood_radius=neighbourhood_radius,
@@ -75,6 +79,16 @@ class CustomAviary(BaseRLAviary):
                          act=act
                          )
         # print(f"Target pos: {self.TARGET_POS}. \n INIT_XYZS:\n{self.INIT_XYZS}")
+        assert(all([(x == y for x, y in zip(a,b) ) for a, b in zip(pos, self.INIT_XYZS)])), \
+        f"INIT_XYZS {self.INIT_XYZS} not equal to passed initial_xyzs {initial_xyzs}"
+
+    def reset(self,
+              seed: int | None = None,
+              options: dict | None = None,
+              ):
+        self.mystep_counter = 0
+        return super().reset(seed=seed, options=options)
+        
 
 
     ###########################################################################
@@ -91,18 +105,20 @@ class CustomAviary(BaseRLAviary):
 
         states = np.array([self._getDroneStateVector(i)
                           for i in range(self.NUM_DRONES)])
-        ret = 0
+        ret = -1 * self.NUM_DRONES # small time penalty
         for i in range(self.NUM_DRONES):
             # reward for coming close to goal
             # ret += max(0, 2- np.linalg.norm(states[i][0:3]- self.TARGET_POS[i]) **4)
             ret += max(0, 2 - np.linalg.norm(self.TARGET_POS[i,:]-states[i][0:3])**4)
 
             for ii in range(self.NUM_DRONES):
+                if i == ii:
+                    continue
                 # penalty for getting near other drones 
                 # ret -= 150 * max(0, 0.02 - np.linalg.norm(states[i][0:3]- states[ii][0:3]) **4)
                 # Simpler version: 
                 # ret -= max(0, 2 - np.linalg.norm(states[ii][0:3]-states[i][0:3])**4)
-                # ret -= 1 if np.linalg.norm(states[i][0:3]- states[ii][0:3]) < 0.3 else 0 
+                ret -= 2 if np.linalg.norm(states[i][0:3]- states[ii][0:3]) < 0.03 else 0 
                 pass
 
 
@@ -125,7 +141,7 @@ class CustomAviary(BaseRLAviary):
         dist = 0
         for i in range(self.NUM_DRONES):
             dist += np.linalg.norm(self.TARGET_POS[i, :]-states[i][0:3])
-        if dist < .001:
+        if dist < .01: # 1 cm tolerance to target
             return True
         else:
             return False
@@ -146,12 +162,16 @@ class CustomAviary(BaseRLAviary):
                           for i in range(self.NUM_DRONES)])
         for i in range(self.NUM_DRONES):
             # TODO: USE BOX.contains here:
-            if (not BOUNDING_BOX.contains(states[i][0:3])  # Truncate when a drones is too far away
+            if ((not BOUNDING_BOX.contains(states[i][0:3]))  # Truncate when a drones is out of bounds
                 # Truncate when a drone is too tilted
                         or abs(states[i][7]) > .4 or abs(states[i][8]) > .4
                 ):
+                # print("here 1", states[i][0:3], self.INIT_XYZS[i])
+                # print(BOUNDING_BOX.min, BOUNDING_BOX.max)
                 return True
-        if self.step_counter/self.PYB_FREQ > self.EPISODE_LEN_SEC:  # Trunctate when too much time has elapsed
+        self.mystep_counter +=1
+        if self.mystep_counter/self.PYB_FREQ > self.EPISODE_LEN_SEC:  # Truncate when too much time has elapsed
+            # print("here 2", self.mystep_counter, self.PYB_FREQ)
             return True
         else:
             return False
@@ -175,9 +195,6 @@ class CustomAviary(BaseRLAviary):
             [[lo, lo, 0, lo, lo, lo, lo, lo, lo, lo, lo, lo] for i in range(self.NUM_DRONES)])
         obs_upper_bound = np.array(
             [[hi, hi, hi, hi, hi, hi, hi, hi, hi, hi, hi, hi] for i in range(self.NUM_DRONES)])
-        #### Add action buffer to observation space ################
-        act_lo = -1
-        act_hi = +1
         return spaces.Box(low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32)
 
     def _computeObs(self):

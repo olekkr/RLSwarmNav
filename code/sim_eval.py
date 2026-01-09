@@ -40,7 +40,7 @@ print(mean_reward, std_reward)
 
 
 
-obs, info = test_env.reset(seed=0, options={})
+obs, info = test_env.reset(seed=1, options={})
 start = time.time()
 for i in range((test_env.EPISODE_LEN_SEC+5)*test_env.CTRL_FREQ):
     action, _states = policy.predict(obs,
@@ -55,7 +55,7 @@ for i in range((test_env.EPISODE_LEN_SEC+5)*test_env.CTRL_FREQ):
     #     ])
 
     obs, reward, terminated, truncated, info = test_env.step(action)
-    print(action)
+    print(obs,reward, terminated, truncated)
     obs2 = obs.squeeze()
     act2 = action.squeeze()
     # print("\tAction", action, "\tReward:", reward, "\tTerminated:", terminated, "\tTruncated:", truncated)
@@ -71,11 +71,9 @@ for i in range((test_env.EPISODE_LEN_SEC+5)*test_env.CTRL_FREQ):
     #         control=np.zeros(12)
     #         )
     test_env.render()
-    # print(terminated)
     sync(i, start, test_env.CTRL_TIMESTEP)
-    if terminated:
-        print("Terminated!")
-        obs = test_env.reset(seed=42, options={})
+    if terminated or truncated:
+        obs, _ = test_env.reset(seed=42, options={})
 
 print(f"obs: {obs} \n target pos: {test_env.TARGET_POS}")
-test_env.close
+test_env.close()
