@@ -12,10 +12,10 @@ URIs = [
     "radio://0/100/2M/E7E7E7E702",
     "radio://0/100/2M/E7E7E7E703",
     "radio://0/100/2M/E7E7E7E704",
-    # "radio://1/100/2M/E7E7E7E705",
-    # "radio://1/100/2M/E7E7E7E706",
-    # "radio://1/100/2M/E7E7E7E707",
-    # "radio://1/100/2M/E7E7E7E708",
+    "radio://1/100/2M/E7E7E7E705",
+    "radio://1/100/2M/E7E7E7E706",
+    "radio://1/100/2M/E7E7E7E707",
+    "radio://1/100/2M/E7E7E7E708",
     # "radio://0/100/2M/E7E7E7E709",
     # "radio://0/100/2M/E7E7E7E710"
 ]
@@ -54,6 +54,3 @@ OBS_SIGNATURE = [
 
 # TODO: # save config to file
 # 
-
-
-## Detached HEAD test

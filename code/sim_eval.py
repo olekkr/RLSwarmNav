@@ -40,9 +40,9 @@ print(mean_reward, std_reward)
 
 
 
-obs, info = test_env.reset(seed=1, options={})
+obs, info = test_env.reset(seed=0, options={})
 start = time.time()
-for i in range(3* (test_env.EPISODE_LEN_SEC+2)*test_env.CTRL_FREQ):
+for i in range(2* (test_env.EPISODE_LEN_SEC+2)*test_env.CTRL_FREQ):
     action, _states = policy.predict(obs,
                                     deterministic=True
                                     )

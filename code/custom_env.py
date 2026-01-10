@@ -5,6 +5,7 @@ from gym_pybullet_drones.envs.BaseRLAviary import BaseRLAviary
 from gym_pybullet_drones.utils.enums import DroneModel, Physics, ActionType, ObservationType
 from stable_baselines3 import PPO
 from gymnasium import spaces
+from scipy.stats import norm
 
 
 from constants import *
@@ -58,7 +59,7 @@ class CustomAviary(BaseRLAviary):
                  obs: ObservationType = ObservationType.KIN,
                  ):
         act = ACTIONTYPE
-        self.EPISODE_LEN_SEC = 15
+        self.EPISODE_LEN_SEC = 20
         defSpacing = 2*1.7/num_drones
 
         # braid test:
@@ -122,19 +123,22 @@ class CustomAviary(BaseRLAviary):
         states = np.array([self._getDroneStateVector(i)
                           for i in range(self.NUM_DRONES)])
         # ret = 0.0
-        ret = -2 * self.NUM_DRONES # small time penalty
+        ret = -0.1 * self.NUM_DRONES # small time penalty
         for i in range(self.NUM_DRONES):
+            distanceToTarget = np.linalg.norm(self.TARGET_POS[i, :]-states[i][0:3])
             # reward for coming close to goal
-            ret += max(0, 2 - np.linalg.norm(self.TARGET_POS[i,:]-states[i][0:3])**4)
+            # ret += max(0, 2 - distanceToTarget**4)
+            ret += norm.pdf(distanceToTarget, loc=0) * 5  # Gaussian reward
 
             for ii in range(self.NUM_DRONES):
                 if i == ii:
                     continue
+                proximityToOther = np.linalg.norm(states[i][0:3]-states[ii][0:3])
                 # penalty for getting near other drones 
-                # ret -= 150 * max(0, 0.02 - np.linalg.norm(states[i][0:3]- states[ii][0:3]) **4)
+                # ret -= 150 * max(0, 0.02 - proximityToOther **4)
                 # Simpler version: 
-                # ret -= max(0, 2 - np.linalg.norm(states[ii][0:3]-states[i][0:3])**4)
-                ret -= 2 if np.linalg.norm(states[i][0:3]- states[ii][0:3]) < 0.3 else 0 
+                # ret -= max(0, 2 - proximityToOther**4)
+                ret -= 2.5 if proximityToOther < 0.3 else 0 
                 pass
 
 

@@ -71,18 +71,18 @@ eval_callback = CallbackList([EvalCallback(eval_env,
                              verbose=0,
                              best_model_save_path=filename,  
                              log_path=filename+'/',
-                             eval_freq=100_000//N_ENVS,           # run evaluation less often
+                             eval_freq=20_000,           # run evaluation less often
                              n_eval_episodes=5,
                              deterministic=True,
                              render=False),
-                CheckpointCallback(save_freq=500_000//N_ENVS,
+                CheckpointCallback(save_freq=200_000, # ~1.2 mil //N_ENVS,
                                  save_path=filename,
                                  name_prefix='rl_model_checkpoint')])
 
 print("training...", N_ENVS)
 model.learn(total_timesteps=int(5e7), # FIXME: change this
                 callback=eval_callback,
-                log_interval=1000,
+                log_interval=50_000,
                 progress_bar=True
                 )
 
