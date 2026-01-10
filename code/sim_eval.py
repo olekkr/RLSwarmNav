@@ -72,7 +72,7 @@ for i in range(2* (test_env.EPISODE_LEN_SEC+2)*test_env.CTRL_FREQ):
     #         )
     test_env.render()
     sync(i, start, test_env.CTRL_TIMESTEP)
-    if terminated or truncated:
+    if terminated :
         print(f"Terminated: {terminated}, Truncated: {truncated} at step {i}")
         obs, _ = test_env.reset(seed=42, options={})
 

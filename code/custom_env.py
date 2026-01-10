@@ -51,7 +51,7 @@ class CustomAviary(BaseRLAviary):
                  neighbourhood_radius: float = np.inf,
                  initial_xyzs=np.array([BOUNDING_BOX.sample() for _ in range(NUM_AGENTS)]),
                  initial_rpys=None,
-                 physics: Physics = Physics.PYB,
+                 physics: Physics = Physics.PYB_DW,
                  pyb_freq: int = 30,
                  ctrl_freq: int = 30,
                  gui=False,
@@ -59,17 +59,21 @@ class CustomAviary(BaseRLAviary):
                  obs: ObservationType = ObservationType.KIN,
                  ):
         act = ACTIONTYPE
-        self.EPISODE_LEN_SEC = 20
+        self.EPISODE_LEN_SEC = 60
         defSpacing = 2*1.7/num_drones
 
-        # braid test:
+        
+        
+        # # braid test:
         # initial_xyzs =  np.array([[0.15-2, i*defSpacing-1.85, 0.5] for i in range(num_drones)])
         # self.TARGET_POS = np.array([
         #     [ defSpacing ,0,0.5],
         #     [ defSpacing ,0,0.5],
         #     [-defSpacing ,0,0.5]])
         
-        # pos Swap: 
+
+
+        # pos Swap test: 
         # in a circle at height 0.5, radius 1.5
         r = 1.5
         initial_xyzs = np.array([[r*np.cos(2*np.pi*i/num_drones), r*np.sin(2*np.pi*i/num_drones), 0.5] for i in range(num_drones)])
@@ -77,6 +81,8 @@ class CustomAviary(BaseRLAviary):
         permutaions = [(i + num_drones//2)%num_drones for i in range(num_drones)]
         # permuted positions
         self.TARGET_POS = np.array([initial_xyzs[permutaions[i]] for i in range(num_drones)])
+
+
 
         self.mystep_counter = 0
         for p in initial_xyzs:
@@ -138,7 +144,7 @@ class CustomAviary(BaseRLAviary):
                 # ret -= 150 * max(0, 0.02 - proximityToOther **4)
                 # Simpler version: 
                 # ret -= max(0, 2 - proximityToOther**4)
-                ret -= 2.5 if proximityToOther < 0.3 else 0 
+                # ret -= 2.5 if proximityToOther < 0.3 else 0 
                 pass
 
 
