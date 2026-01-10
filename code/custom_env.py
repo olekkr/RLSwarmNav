@@ -59,7 +59,7 @@ class CustomAviary(BaseRLAviary):
                  obs: ObservationType = ObservationType.KIN,
                  ):
         act = ACTIONTYPE
-        self.EPISODE_LEN_SEC = 60
+        self.EPISODE_LEN_SEC = 120
         defSpacing = 2*1.7/num_drones
 
         
