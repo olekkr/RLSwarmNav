@@ -61,12 +61,21 @@ class CustomAviary(BaseRLAviary):
         self.EPISODE_LEN_SEC = 15
         defSpacing = 2*1.7/num_drones
 
-        initial_xyzs =  np.array([[0.15-2, i*defSpacing-1.85, 0.5] for i in range(num_drones)])
-        self.TARGET_POS = np.array([
-            [ defSpacing ,0,0.5],
-            [ defSpacing ,0,0.5],
-            [-defSpacing ,0,0.5]])
+        # braid test:
+        # initial_xyzs =  np.array([[0.15-2, i*defSpacing-1.85, 0.5] for i in range(num_drones)])
+        # self.TARGET_POS = np.array([
+        #     [ defSpacing ,0,0.5],
+        #     [ defSpacing ,0,0.5],
+        #     [-defSpacing ,0,0.5]])
         
+        # pos Swap: 
+        # in a circle at height 0.5, radius 1.5
+        r = 1.5
+        initial_xyzs = np.array([[r*np.cos(2*np.pi*i/num_drones), r*np.sin(2*np.pi*i/num_drones), 0.5] for i in range(num_drones)])
+        # target permutes position such that they go to opposite side of circle
+        permutaions = [(i + num_drones//2)%num_drones for i in range(num_drones)]
+        # permuted positions
+        self.TARGET_POS = np.array([initial_xyzs[permutaions[i]] for i in range(num_drones)])
 
         self.mystep_counter = 0
         for p in initial_xyzs:
