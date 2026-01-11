@@ -1,3 +1,5 @@
+
+import itertools
 import numpy as np
 import os
 
@@ -136,25 +138,29 @@ class CustomAviary(BaseRLAviary):
 
         states = np.array([self._getDroneStateVector(i)
                           for i in range(self.NUM_DRONES)])
-        # ret = 0.0
-        ret = -0.1 * self.NUM_DRONES # small time penalty
+        
+        # small time penalty
+        ret = -0.1 * self.NUM_DRONES 
+        
+        # proximity reward
         for i in range(self.NUM_DRONES):
-            distanceToTarget = np.linalg.norm(self.TARGET_POS[i, :]-states[i][0:3])
-            # reward for coming close to goal
-            # ret += max(0, 2 - distanceToTarget**4)
-            ret += norm.pdf(distanceToTarget, loc=0) * 5  # Gaussian reward
+            goaldDist = np.linalg.norm(self.TARGET_POS[i, :]-states[i][0:3])
+            ret += (4**2-goaldDist**2) # 16 at 0m; 0 at 4m
+        
+        # peer collision penalty
+        for i, j in itertools.combinations(range(self.NUM_DRONES), 2):
+            proximityToOther = np.linalg.norm(states[i][0:3]-states[j][0:3])
+            # ret -= 5 if proximityToOther < 0.5 else 0 
+            c = 0.7
+            ret -= max((c-proximityToOther)/c, 0)*35  # max penalty 2.3 at 0m; 0 at 0.7m (c meters) 
 
-            for ii in range(self.NUM_DRONES):
-                if i == ii:
-                    continue
-                proximityToOther = np.linalg.norm(states[i][0:3]-states[ii][0:3])
-                # penalty for getting near other drones 
-                # ret -= 150 * max(0, 0.02 - proximityToOther **4)
-                # Simpler version: 
-                # ret -= max(0, 2 - proximityToOther**4)
-                ret -= 3 if proximityToOther < 0.5 else 0 
-                # ret -= norm.pdf(proximityToOther, loc=0, scale=0.5)*5
-                pass
+        # termination bonus
+        if self._computeTerminated():
+            ret += 100 * self.NUM_DRONES
+        
+        # truncation penalty
+        if self._computeTruncated():
+            ret -= 50 * self.NUM_DRONES
 
 
         return ret
@@ -162,21 +168,12 @@ class CustomAviary(BaseRLAviary):
     ###########################################################################
 
     def _computeTerminated(self):
-        """Computes the current done value.
-
-        Returns
-        -------
-        bool
-            Whether the current episode is done.
-
-        """
-        # TODO: change
         states = np.array([self._getDroneStateVector(i)
                           for i in range(self.NUM_DRONES)])
         dist = 0
         for i in range(self.NUM_DRONES):
             dist += np.linalg.norm(self.TARGET_POS[i, :]-states[i][0:3])
-        if dist < .01: # 10 cm tolerance to target
+        if dist < .1* self.NUM_DRONES: # mean distance less than 10 cm
             return True
         else:
             return False
@@ -184,29 +181,16 @@ class CustomAviary(BaseRLAviary):
     ###########################################################################
 
     def _computeTruncated(self):
-        """Computes the current truncated value.
-
-        Returns
-        -------
-        bool
-            Whether the current episode timed out.
-
-        """
-        # TODO: change
         states = np.array([self._getDroneStateVector(i)
                           for i in range(self.NUM_DRONES)])
         for i in range(self.NUM_DRONES):
-            # TODO: USE BOX.contains here:
             if ((not BOUNDING_BOX.contains(states[i][0:3]))  # Truncate when a drones is out of bounds
                 # Truncate when a drone is too tilted
                         or abs(states[i][7]) > .4 or abs(states[i][8]) > .4
                 ):
-                # print("here 1", states[i][0:3], self.INIT_XYZS[i])
-                # print(BOUNDING_BOX.min, BOUNDING_BOX.max)
                 return True
         self.mystep_counter +=1
         if self.mystep_counter/self.PYB_FREQ > self.EPISODE_LEN_SEC:  # Truncate when too much time has elapsed
-            # print("here 2", self.mystep_counter, self.PYB_FREQ)
             return True
         else:
             return False
