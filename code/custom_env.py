@@ -70,7 +70,7 @@ class CustomAviary(BaseRLAviary):
         
         
         # # braid test:
-        # initial_xyzs =  np.array([[0.15-2, i*defSpacing-1.85, 0.5] for i in range(num_drones)])
+        # initial_xyzs =  np.array([[0.15-2, (i+1)*defSpacing-1.85, 0.5] for i in range(num_drones)])
         # self.TARGET_POS = np.array([
         #     [ defSpacing ,0,0.5],
         #     [ defSpacing ,0,0.5],
@@ -149,7 +149,8 @@ class CustomAviary(BaseRLAviary):
                 # ret -= 150 * max(0, 0.02 - proximityToOther **4)
                 # Simpler version: 
                 # ret -= max(0, 2 - proximityToOther**4)
-                # ret -= 2.5 if proximityToOther < 0.3 else 0 
+                ret -= 3 if proximityToOther < 0.5 else 0 
+                # ret -= norm.pdf(proximityToOther, loc=0, scale=0.5)*5
                 pass
 
 
