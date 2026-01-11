@@ -65,6 +65,7 @@ class CustomAviary(BaseRLAviary):
                  ):
         act = ACTIONTYPE
         self.EPISODE_LEN_SEC = 120
+
         defSpacing = 2*1.7/num_drones
 
         
@@ -108,6 +109,8 @@ class CustomAviary(BaseRLAviary):
         # print(f"Target pos: {self.TARGET_POS}. \n INIT_XYZS:\n{self.INIT_XYZS}")
         assert(all([(x == y for x, y in zip(a,b) ) for a, b in zip(initial_xyzs, self.INIT_XYZS)])), \
         f"INIT_XYZS {self.INIT_XYZS} not equal to passed initial_xyzs {initial_xyzs}"
+
+        # self.SPEED_LIMIT = 0.25  # m/s
         
 
     def reset(self,
