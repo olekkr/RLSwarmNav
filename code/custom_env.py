@@ -9,6 +9,8 @@ from scipy.stats import norm
 
 
 from constants import *
+import sys
+
 
 import observation_module
 
@@ -19,6 +21,9 @@ def load_policy(path="results"):
 
     :param path: Path to policy save directory
     """
+    if len(sys.argv) > 1:
+        model = PPO.load(sys.argv[1])
+        return model
     results = sorted(os.listdir(path), reverse=True)
     inpnum = None
     while inpnum is None:
