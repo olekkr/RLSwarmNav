@@ -68,7 +68,7 @@ with open(constants_save, "w") as dst, open(constants.__file__, "r") as src:
 eval_callback = CallbackList([EvalCallback(eval_env,
                              callback_on_new_best=None,
                              callback_after_eval=None,
-                             verbose=0,
+                             verbose=1,
                              best_model_save_path=filename,  
                              log_path=filename+'/',
                              eval_freq=20_000,           # run evaluation less often
@@ -80,7 +80,7 @@ eval_callback = CallbackList([EvalCallback(eval_env,
                                  name_prefix='rl_model_checkpoint')])
 
 print("training...", N_ENVS)
-model.learn(total_timesteps=int(20_000_000), # FIXME: change this
+model.learn(total_timesteps=int(200_000), # FIXME: change this
                 callback=eval_callback,
                 log_interval=50_000,
                 progress_bar=True

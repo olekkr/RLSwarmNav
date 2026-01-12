@@ -54,3 +54,8 @@ OBS_SIGNATURE = [
 
 # TODO: # save config to file
 # 
+
+
+
+# observationspace save:  """ observation space config: [('PosObs', {}), ('QUATObs', {}), ('RPYObs', {}), ('VelObs', {}), ('AngRateObs', {})]
+"""

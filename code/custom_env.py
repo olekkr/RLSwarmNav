@@ -140,7 +140,7 @@ class CustomAviary(BaseRLAviary):
                           for i in range(self.NUM_DRONES)])
         
         # small time penalty
-        ret = -0.1 * self.NUM_DRONES 
+        ret = -5 * self.NUM_DRONES 
         
         # proximity reward
         for i in range(self.NUM_DRONES):
@@ -151,8 +151,8 @@ class CustomAviary(BaseRLAviary):
         for i, j in itertools.combinations(range(self.NUM_DRONES), 2):
             proximityToOther = np.linalg.norm(states[i][0:3]-states[j][0:3])
             # ret -= 5 if proximityToOther < 0.5 else 0 
-            c = 0.7
-            ret -= max((c-proximityToOther)/c, 0)*35  # max penalty 2.3 at 0m; 0 at 0.7m (c meters) 
+            c = 1
+            ret -= max((c-proximityToOther)/c, 0)*35  # max penalty 2.3 at 0m; 0 at 1m (c meters) 
 
         # termination bonus
         if self._computeTerminated():
