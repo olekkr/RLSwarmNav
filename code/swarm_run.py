@@ -90,10 +90,15 @@ def _stop(_, drone):
 def _act(_, drone):
     """Apply stored action to the drone using the configured interface.
     """
-    if ACTIONTYPE == ActionType.PID:
-        drone.lc.send_position_setpoint(*drone.act)
-    elif ACTIONTYPE == ActionType.VEL:
-        drone.lc.send_velocity_world_setpoint(*drone.act)
+    if ACTIONTYPE == ActionType.VEL:
+        print(drone.act[0] * drone.act[3], drone.act[1] * drone.act[2], drone.act[2] * drone.act[3], 0)
+        s = drone.act[3] * 0.25 # plug into global speed limit
+        drone.lc.send_velocity_world_setpoint(
+            drone.act[0] * s,
+            drone.act[1] * s,
+            drone.act[2] * s, 
+            0
+            )
     else: 
         print("not supported action type")
         exit()
@@ -163,7 +168,7 @@ class Runtime() :
         self._collect_obs()
         action, _states = self.policy.predict(self.obs, deterministic=True)
         # action = np.concatenate([action, np.ones((len(action),1))], axis=1)
-        action[:,3]=1
+        # action[:,3]=1
         print(f"action: \n{action}, \nobservation: \n{self.obs}" )
         for d, a in zip(self.drones, action): 
             d.update_act(a)
@@ -225,7 +230,7 @@ if __name__ == "__main__":
     np.set_printoptions(precision=3, sign=" ", suppress=True)
 
     drone = Runtime() 
-    drone.run(4)
+    drone.run(30)
 
 
 

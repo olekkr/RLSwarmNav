@@ -1,8 +1,9 @@
 
 import numpy as np
-# from cflib.crazyflie.log import LogConfig
+from cflib.crazyflie.log import LogConfig
 from mock_crazyflie import MockLogConfig
-from mock_crazyflie import MockLogConfig as LogConfig
+# from mock_crazyflie import MockLogConfig as LogConfig
+
 from constants import *
 from constants import BOUNDING_BOX
 

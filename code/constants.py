@@ -12,10 +12,10 @@ URIs = [
     "radio://0/100/2M/E7E7E7E702",
     "radio://0/100/2M/E7E7E7E703",
     "radio://0/100/2M/E7E7E7E704",
-    # "radio://1/100/2M/E7E7E7E705",
-    # "radio://1/100/2M/E7E7E7E706",
-    # "radio://1/100/2M/E7E7E7E707",
-    # "radio://1/100/2M/E7E7E7E708",
+    # "radio://0/100/2M/E7E7E7E705",
+    # "radio://0/100/2M/E7E7E7E706",
+    # "radio://0/100/2M/E7E7E7E707",
+    # "radio://0/100/2M/E7E7E7E708",
     # "radio://0/100/2M/E7E7E7E709",
     # "radio://0/100/2M/E7E7E7E710"
 ]
@@ -36,11 +36,11 @@ class Box:
 ACTIONTYPE = ActionType.VEL
 NUM_AGENTS = len(URIs) 
 CTRL_FREQ = 30
-DEBUG = True
+DEBUG = False
 BOUNDING_BOX = Box( [-2,-2,0], [4,4,2])
 OBS_SIGNATURE = [
     ("PosObs",{}),
-    ("QUATObs",{}),
+    # ("QUATObs",{}),
     ("RPYObs",{}),
     ("VelObs",{}),
     ("AngRateObs",{}),
