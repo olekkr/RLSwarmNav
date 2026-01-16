@@ -76,7 +76,7 @@ def _start(scf, drone):
     # for o in drone.obs_mods:
     #     o.start()
 
-    drone.mc.take_off(0.4) # TODO: start height randomizer
+    drone.mc.take_off(0.5) 
 
 def _stop(_, drone):
     """Stop motion, observation modules and land for a single drone.

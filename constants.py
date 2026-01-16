@@ -32,7 +32,6 @@ class Box:
         return self.min + np.random.rand(3) * (self.max - self.min)
 
 
-# TODO: # BUILDNAME = ""
 ACTIONTYPE = ActionType.VEL
 NUM_AGENTS = len(URIs) 
 CTRL_FREQ = 30
@@ -52,5 +51,3 @@ OBS_SIGNATURE = [
 
 
 
-# TODO: # save config to file
-# 

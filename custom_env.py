@@ -207,7 +207,6 @@ class CustomAviary(BaseRLAviary):
         ############################################################
         # OBS SPACE OF SIZE 12
         # Observation vector ### X        Y        Z       Q1   Q2   Q3   Q4   R       P       Y       VX       VY       VZ       WX       WY       WZ
-        # TODO: plug in obs-mod system
         lo = -np.inf
         hi = np.inf
         obs_lower_bound = np.array(

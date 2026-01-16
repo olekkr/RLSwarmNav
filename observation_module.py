@@ -8,9 +8,6 @@ from constants import *
 from constants import BOUNDING_BOX
 
 
-# TODO:need a hook to bind observations to each other across drones
-# TODO:need method to be called in _observationSpace to get the size of the observation space
-# TODO:need method to be called in _computeObs 
 
 class ObsFactory:
     def __init__(self, mod_call_sig):
@@ -41,7 +38,6 @@ class ObsContainer:
         return self
 
     def get_data(self):
-        # TODO: do manual update on mods here
         for m in self.modules:
             m.manual_update_data()
         print([m.data for m in self.modules])
@@ -126,15 +122,15 @@ class TargetPosObs(ObsMod):
     def stop(self):
         pass
 
-class RelTargetPos(TargetPosObs):
-    def __init__(self, position):
-        super().__init__(position)
-        self.target_pos = self.data
-
-    def manual_update_data(self):
-        currpos = self.parent_container.intra_query("PosObs")
-        targetpos = self.parent_container.intra_query("TargetPosObs")
-        self.data = targetpos - currpos
+# class RelTargetPos(TargetPosObs):
+#     def __init__(self, position):
+#         super().__init__(position)
+#         self.target_pos = self.data
+#
+#     def manual_update_data(self):
+#         currpos = self.parent_container.intra_query("PosObs")
+#         targetpos = self.parent_container.intra_query("TargetPosObs")
+#         self.data = targetpos - currpos
 
 # class RelDronePos(ObsMod): # going to do this later
 #     def __init__(self, size):
