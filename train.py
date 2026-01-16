@@ -55,13 +55,6 @@ else:
 
 os.makedirs(filename, exist_ok=True)
 
-## Quick and dirty config savign for each result
-constants_save = os.path.join(filename, "constants.py-save")
-with open(constants_save, "w") as dst, open(constants.__file__, "r") as src:
-    dst.writelines(src.readlines())
-    dst.write("\n\n\n# observationspace save: ")
-    dst.writelines(f" \"\"\" observation space config: {OBS_SIGNATURE}\n\"\"\"")
-
 
 
 # less frequent evals and avoid saving every eval (set best_model_save_path=None to skip frequent model saves)
