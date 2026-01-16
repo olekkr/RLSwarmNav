@@ -56,41 +56,20 @@ class CustomAviary(BaseRLAviary):
                  drone_model: DroneModel = DroneModel.CF2X,
                  num_drones: int = NUM_AGENTS,
                  neighbourhood_radius: float = np.inf,
-                 initial_xyzs=np.array([BOUNDING_BOX.sample() for _ in range(NUM_AGENTS)]),
+                 initial_xyzs=INITIAL_XYZS,
                  initial_rpys=None,
                  physics: Physics = Physics.PYB_DW,
                  pyb_freq: int = 30,
-                 ctrl_freq: int = 30,
+                 ctrl_freq: int = CTRL_FREQ,
                  gui=False,
                  record=False,
                  obs: ObservationType = ObservationType.KIN,
                  ):
         act = ACTIONTYPE
-        self.EPISODE_LEN_SEC = 120
+        self.EPISODE_LEN_SEC = EPISODE_LEN_SEC
+        self.TARGET_POS = TARGET_POS
 
-        defSpacing = 2*1.7/num_drones
-
-        
-        
-        # # braid test:
-        # initial_xyzs =  np.array([[0.15-2, (i+1)*defSpacing-1.85, 0.5] for i in range(num_drones)])
-        # self.TARGET_POS = np.array([
-        #     [ defSpacing ,0,0.5],
-        #     [ defSpacing ,0,0.5],
-        #     [-defSpacing ,0,0.5]])
-        
-
-
-        # pos Swap test: 
-        # in a circle at height 0.5, radius 1.5
-        r = 1.5
-        initial_xyzs = np.array([[r*np.cos(2*np.pi*i/num_drones), r*np.sin(2*np.pi*i/num_drones), 0.5] for i in range(num_drones)])
-        # target permutes position such that they go to opposite side of circle
-        permutaions = [(i + num_drones//2)%num_drones for i in range(num_drones)]
-        # permuted positions
-        self.TARGET_POS = np.array([initial_xyzs[permutaions[i]] for i in range(num_drones)])
-
-
+        self.SPEED_LIMIT = MAX_SPEED  # m/s
 
         self.mystep_counter = 0
         for p in initial_xyzs:
@@ -112,7 +91,6 @@ class CustomAviary(BaseRLAviary):
         assert(all([(x == y for x, y in zip(a,b) ) for a, b in zip(initial_xyzs, self.INIT_XYZS)])), \
         f"INIT_XYZS {self.INIT_XYZS} not equal to passed initial_xyzs {initial_xyzs}"
 
-        # self.SPEED_LIMIT = 0.25  # m/s
         
 
     def reset(self,

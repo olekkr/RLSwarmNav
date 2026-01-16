@@ -1,8 +1,8 @@
 import os 
 
 from gym_pybullet_drones.utils.enums import ActionType, Physics
-# from observation_module import *
 import numpy as np
+import util
 
 np.set_printoptions(precision=3, sign=" ", suppress=True)
 
@@ -19,24 +19,7 @@ URIs = [
     # "radio://0/100/2M/E7E7E7E709",
     # "radio://0/100/2M/E7E7E7E710"
 ]
-class Box:
-    # FORMAT: [First Corner, Offsets: [l,w,h]]
-    def __init__(self, min_pt, size):
-        self.min = np.array(min_pt)
-        self.max = np.add(min_pt , size)
 
-    def contains(self, p):
-        return all(self.min[i] <= p[i] <= self.max[i] for i in range(3))
-
-    def sample(self):
-        return self.min + np.random.rand(3) * (self.max - self.min)
-
-
-ACTIONTYPE = ActionType.VEL
-NUM_AGENTS = len(URIs) 
-CTRL_FREQ = 30
-DEBUG = False
-BOUNDING_BOX = Box( [-2,-2,0], [4,4,2])
 OBS_SIGNATURE = [
     ("PosObs",{}),
     # ("QUATObs",{}),
@@ -48,6 +31,24 @@ OBS_SIGNATURE = [
     # ("ZeroObs", {"size":36}),
     # ("RelDronePos", {"size": NUM_AGENTS*3})
 ]
+
+
+ACTIONTYPE = ActionType.VEL
+NUM_AGENTS = len(URIs) 
+CTRL_FREQ = 30
+DEBUG = False
+BOUNDING_BOX = util.Box( [-2,-2,0], [4,4,2])
+EPISODE_LEN_SEC = 120
+MAX_SPEED = 0.25  # m/s
+
+#####################################
+# pos Swap test: 
+# in a circle at height 0.5, radius 1.5
+r = 1.5
+INITIAL_XYZS = np.array([[r*np.cos(2*np.pi*i/NUM_AGENTS), r*np.sin(2*np.pi*i/NUM_AGENTS), 0.5] for i in range(NUM_AGENTS)])
+permutaions = [(i + NUM_AGENTS//2)%NUM_AGENTS for i in range(NUM_AGENTS)]
+TARGET_POS = np.array([INITIAL_XYZS[permutaions[i]] for i in range(NUM_AGENTS)])
+#####################################
 
 
 
