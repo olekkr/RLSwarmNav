@@ -116,14 +116,14 @@ class CustomAviary(BaseRLAviary):
 
         states = np.array([self._getDroneStateVector(i)
                           for i in range(self.NUM_DRONES)])
-        
-        # small time penalty
-        ret = -5 * self.NUM_DRONES 
-        
+        ret = 0
+
         # proximity reward
+        sigma = 1.2
+        goal_reward=lambda d :np.exp(-(d**2)/(2*sigma**2)) * 24
         for i in range(self.NUM_DRONES):
             goaldDist = np.linalg.norm(self.TARGET_POS[i, :]-states[i][0:3])
-            ret += (4**2-goaldDist**2) # 16 at 0m; 0 at 4m
+            ret += goal_reward(goaldDist) 
         
         # peer collision penalty
         for i, j in itertools.combinations(range(self.NUM_DRONES), 2):
@@ -134,11 +134,16 @@ class CustomAviary(BaseRLAviary):
 
         # termination bonus
         if self._computeTerminated():
-            ret += 100 * self.NUM_DRONES
+            ret += 25 * self.NUM_DRONES * EPISODE_LEN_SEC * self.CTRL_FREQ 
         
         # truncation penalty
         if self._computeTruncated():
-            ret -= 50 * self.NUM_DRONES
+            ret -= 15 * self.NUM_DRONES * EPISODE_LEN_SEC * self.CTRL_FREQ
+        
+        # action smoothness penalty
+        # action_diff = np.linalg.norm(self.action_buffer[0] - self.action_buffer[1])
+        action_diff = np.subtract(self.action_buffer[-1],self.action_buffer[-2], axis=1).mean()
+        ret -= action_diff * 8 * self.NUM_DRONES # penalty scaling
 
 
         return ret
