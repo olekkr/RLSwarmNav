@@ -142,8 +142,8 @@ class CustomAviary(BaseRLAviary):
         
         # action smoothness penalty
         # action_diff = np.linalg.norm(self.action_buffer[0] - self.action_buffer[1])
-        action_diff = np.subtract(self.action_buffer[-1],self.action_buffer[-2], axis=1).mean()
-        ret -= action_diff * 8 * self.NUM_DRONES # penalty scaling
+        # action_diff = np.subtract(self.action_buffer[-1],self.action_buffer[-2], axis=1).mean()
+        # ret -= action_diff * 8 * self.NUM_DRONES # penalty scaling
 
 
         return ret
@@ -220,14 +220,4 @@ class CustomAviary(BaseRLAviary):
         ############################################################
 
     def _computeInfo(self):
-        """Computes the current info dict(s).
-
-        Unused.
-
-        Returns
-        -------
-        dict[str, int]
-            Dummy value.
-
-        """
-        return {"answer": 42}  # Calculated by the Deep Thought supercomputer in 7.5M years
+        return {}

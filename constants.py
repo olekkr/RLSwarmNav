@@ -42,17 +42,16 @@ EPISODE_LEN_SEC = 120
 MAX_SPEED = 0.25  # m/s
 
 #####################################
-# pos Swap test: 
-# in a circle at height 0.5, radius 1.5
-# r = 1.5
-# permutaions = [(i + NUM_AGENTS//2)%NUM_AGENTS for i in range(NUM_AGENTS)]
-# INITIAL_XYZS = np.array([[r*np.cos(2*np.pi*i/NUM_AGENTS), r*np.sin(2*np.pi*i/NUM_AGENTS), 0.5] for i in range(NUM_AGENTS)])
-# TARGET_POS = np.array([INITIAL_XYZS[permutaions[i]] for i in range(NUM_AGENTS)])
+# pos Swap test:  (in a circle at height 0.5, radius 1.5)
+r = 1.5
+permutaions = [(i + NUM_AGENTS//2)%NUM_AGENTS for i in range(NUM_AGENTS)]
+INITIAL_XYZS = np.array([[r*np.cos(2*np.pi*i/NUM_AGENTS), r*np.sin(2*np.pi*i/NUM_AGENTS), 0.5] for i in range(NUM_AGENTS)])
+TARGET_POS = np.array([INITIAL_XYZS[permutaions[i]] for i in range(NUM_AGENTS)])
 #####################################
 
 # sanity check
-NUM_AGENTS = 1
-INITIAL_XYZS = np.array([[0,0,0.5]])
-TARGET_POS = np.array([[1,0,1.5]])
+# NUM_AGENTS = 1
+# INITIAL_XYZS = np.array([[0,0,0.5]])
+# TARGET_POS = np.array([[1,0,1.5]])
 
 

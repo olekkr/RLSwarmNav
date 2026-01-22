@@ -167,8 +167,6 @@ class Runtime() :
         """
         self._collect_obs()
         action, _states = self.policy.predict(self.obs, deterministic=True)
-        # action = np.concatenate([action, np.ones((len(action),1))], axis=1)
-        # action[:,3]=1
         print(f"action: \n{action}, \nobservation: \n{self.obs}" )
         for d, a in zip(self.drones, action): 
             d.update_act(a)
