@@ -9,7 +9,7 @@ from stable_baselines3.common.evaluation import evaluate_policy
 
 from gym_pybullet_drones.utils.Logger import Logger
 from gym_pybullet_drones.utils.utils import sync, str2bool
-from gym_pybullet_drones.utils.enums import ObservationType, ActionType
+from gym_pybullet_drones.utils.enums import ObservationType, ActionType,Physics
 
 from constants import *
 import custom_env 
@@ -21,16 +21,18 @@ policy = custom_env.load_policy()
 
 test_env = custom_env.CustomAviary(
     gui=True,
-    num_drones=NUM_AGENTS)
+    num_drones=NUM_AGENTS, 
+    # physics=Physics.PYB
+)
 
 test_env_nogui = custom_env.CustomAviary(num_drones=NUM_AGENTS)
 
 mean_reward, std_reward = evaluate_policy(policy,
                                               test_env_nogui,
-                                              n_eval_episodes=10)
+                                              n_eval_episodes=10,
+                                              deterministic=True)
 print(mean_reward, std_reward)
-
-
+time.sleep(3)
 
 # logger = Logger(logging_freq_hz=int(test_env.CTRL_FREQ),
 #             num_drones=NUM_AGENTS,
@@ -54,7 +56,10 @@ for i in range(2* (test_env.EPISODE_LEN_SEC+2)*test_env.CTRL_FREQ):
     #                           [1,1,-1],
     #     ])
 
-    obs, reward, terminated, truncated, info = test_env.step(action)
+    try: 
+        obs, reward, terminated, truncated, info = test_env.step(action)
+    except: 
+        break
     print(obs,reward, terminated, truncated)
     obs2 = obs.squeeze()
     act2 = action.squeeze()
@@ -72,9 +77,10 @@ for i in range(2* (test_env.EPISODE_LEN_SEC+2)*test_env.CTRL_FREQ):
     #         )
     test_env.render()
     sync(i, start, test_env.CTRL_TIMESTEP)
-    if terminated :
+    if terminated or truncated:
         print(f"Terminated: {terminated}, Truncated: {truncated} at step {i}")
         obs, _ = test_env.reset(seed=42, options={})
 
-print(f"obs: {obs} \n target pos: {test_env.TARGET_POS}")
+# print(f"obs: {obs} \n target pos: {test_env.TARGET_POS}")
 test_env.close()
+

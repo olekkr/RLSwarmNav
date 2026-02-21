@@ -133,12 +133,12 @@ class CustomAviary(BaseRLAviary):
             ret -= max((c-proximityToOther)/c, 0)*35  # max penalty 2.3 at 0m; 0 at 1m (c meters) 
 
         # termination bonus
-        if self._computeTerminated():
-            ret += 25 * self.NUM_DRONES * EPISODE_LEN_SEC * self.CTRL_FREQ 
-        
-        # truncation penalty
-        if self._computeTruncated():
-            ret -= 15 * self.NUM_DRONES * EPISODE_LEN_SEC * self.CTRL_FREQ
+        # if self._computeTerminated():
+        #     ret += 25 * self.NUM_DRONES * EPISODE_LEN_SEC * self.CTRL_FREQ 
+        #
+        # # truncation penalty
+        # if self._computeTruncated():
+        #     ret -= 15 * self.NUM_DRONES * EPISODE_LEN_SEC * self.CTRL_FREQ
         
         # action smoothness penalty
         # action_diff = np.linalg.norm(self.action_buffer[0] - self.action_buffer[1])
