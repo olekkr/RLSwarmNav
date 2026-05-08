@@ -5,8 +5,9 @@
 ## Setup:
 install by following the instructions:
 [gym-pybullet-drones](https://github.com/learnsyslab/gym-pybullet-drones#installation)
-Also install cflib via:
-> pip install cflib
+Also install cflib tensorboard, stablebaselines3 via:
+> pip install cflib tensorboard tensorboard\[extra\]
+
 
 Make sure to setup `config.py` before running 
 
