@@ -1,19 +1,10 @@
 import os
-import time
 from datetime import datetime
-import argparse
-import gymnasium as gym
-import numpy as np
-import stable_baselines3
 import torch
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.callbacks import EvalCallback, CallbackList, CheckpointCallback
-from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.monitor import Monitor
-
-from gym_pybullet_drones.utils.Logger import Logger
-from gym_pybullet_drones.utils.utils import sync
 
 from constants import * 
 import custom_env

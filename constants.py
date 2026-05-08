@@ -1,6 +1,4 @@
-import os 
-
-from gym_pybullet_drones.utils.enums import ActionType, Physics
+from gym_pybullet_drones.utils.enums import ActionType
 import numpy as np
 import util
 
