@@ -131,14 +131,17 @@ class CustomAviary(BaseRLAviary):
             # ret -= 5 if proximityToOther < 0.5 else 0 
             c = 1
             ret -= max((c-proximityToOther)/c, 0)*35  # max penalty 2.3 at 0m; 0 at 1m (c meters) 
+        
+        # steps left = total steps - steps counted
+        steps_left = (EPISODE_LEN_SEC * self.CTRL_FREQ) - self.mystep_counter
+        bonus_factor = steps_left * self.NUM_DRONES
 
         # termination bonus
-        # if self._computeTerminated():
-        #     ret += 25 * self.NUM_DRONES * EPISODE_LEN_SEC * self.CTRL_FREQ 
-        #
-        # # truncation penalty
-        # if self._computeTruncated():
-        #     ret -= 15 * self.NUM_DRONES * EPISODE_LEN_SEC * self.CTRL_FREQ
+        if self.is_success():
+            ret += 25 * bonus_factor 
+        # out of bounds penalty
+        if self.is_out_of_bouds():
+            ret -= 15 * bonus_factor 
         
         # action smoothness penalty
         # action_diff = np.linalg.norm(self.action_buffer[0] - self.action_buffer[1])
@@ -150,9 +153,9 @@ class CustomAviary(BaseRLAviary):
 
     ###########################################################################
 
-    def _computeTerminated(self):
+    def is_success(self):
         states = np.array([self._getDroneStateVector(i)
-                          for i in range(self.NUM_DRONES)])
+                           for i in range(self.NUM_DRONES)])
         dist = 0
         for i in range(self.NUM_DRONES):
             dist += np.linalg.norm(self.TARGET_POS[i, :]-states[i][0:3])
@@ -161,9 +164,7 @@ class CustomAviary(BaseRLAviary):
         else:
             return False
 
-    ###########################################################################
-
-    def _computeTruncated(self):
+    def is_out_of_bouds(self):
         states = np.array([self._getDroneStateVector(i)
                           for i in range(self.NUM_DRONES)])
         for i in range(self.NUM_DRONES):
@@ -172,6 +173,18 @@ class CustomAviary(BaseRLAviary):
                         or abs(states[i][7]) > .4 or abs(states[i][8]) > .4
                 ):
                 return True
+        return False
+
+    ###########################################################################
+
+    def _computeTerminated(self):
+        return self.is_success()
+
+
+
+    def _computeTruncated(self):
+        if self.is_out_of_bouds(): 
+            return True
         self.mystep_counter +=1
         if self.mystep_counter/self.PYB_FREQ > self.EPISODE_LEN_SEC:  # Truncate when too much time has elapsed
             return True
